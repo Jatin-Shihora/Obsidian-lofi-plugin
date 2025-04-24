@@ -6,3 +6,203 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+/* styles.css */
+
+/* --- Styles for the Custom Folder Browser UI --- */
+
+/* Overall container for the navigation elements (path and Up button) */
+.lofi-folder-browser-nav {
+    display: flex; /* Arrange path and button side-by-side */
+    align-items: center; /* Vertically align items */
+    gap: 10px; /* Space between the path element and the Up button */
+    margin-bottom: 10px; /* Space below the navigation bar */
+    padding-bottom: 8px; /* Space below the border */
+    border-bottom: 1px solid var(--background-modifier-border); /* Add a separating line */
+    flex-wrap: wrap; /* Allow items to wrap on smaller screens */
+}
+
+/* Element displaying the current path */
+.lofi-browser-current-path {
+    flex-grow: 1; /* Allow the path text to take up available space */
+    font-weight: bold; /* Make the path text stand out */
+    color: var(--text-normal); /* Use normal text color from theme */
+    word-break: break-all; /* Prevent long paths from overflowing */
+}
+
+/* Style for the 'Up' button */
+.lofi-browser-up-button {
+    /* Use Obsidian's button styling variables */
+    padding: 4px 10px; /* Adjust padding */
+    cursor: pointer; /* Indicate clickable */
+    border: 1px solid var(--interactive-accent); /* Accent color border */
+    border-radius: var(--button-border-radius); /* Rounded corners */
+    background-color: var(--background-primary-alt); /* Background color from theme */
+    color: var(--text-normal); /* Text color from theme */
+    font-size: var(--font-ui-small); /* Match smaller UI font */
+    line-height: 1; /* Adjust line height */
+    transition: background-color 0.15s ease; /* Smooth hover effect */
+}
+
+/* Hover effect for the 'Up' button */
+.lofi-browser-up-button:hover {
+    background-color: var(--background-modifier-hover); /* Hover background color */
+}
+
+/* Style for the 'Select This Folder' button */
+.lofi-browser-select-button {
+     /* Similar styling to the Up button */
+    display: block; /* Make it a block element to take full width */
+    width: 100%; /* Full width */
+    margin-top: 10px; /* Space above the select button */
+    padding: 6px 10px; /* Adjust padding */
+    cursor: pointer;
+    border: 1px solid var(--interactive-accent);
+    border-radius: var(--button-border-radius);
+    background-color: var(--interactive-accent); /* Use accent color for primary action */
+    color: var(--text-inverted); /* Inverted text color for accent background */
+    font-size: var(--font-ui-normal); /* Normal UI font size */
+    line-height: 1;
+    transition: background-color 0.15s ease;
+}
+
+/* Hover effect for the 'Select This Folder' button */
+.lofi-browser-select-button:hover {
+    background-color: var(--interactive-accent-hover); /* Darker accent color on hover */
+}
+
+
+/* Container for the list of folder and file items */
+.lofi-folder-browser-list {
+    border: 1px solid var(--background-modifier-border); /* Border around the list */
+    max-height: 250px; /* Set a maximum height to make the list scrollable */
+    overflow-y: auto; /* Add a vertical scrollbar when content exceeds max height */
+    padding: 5px; /* Padding inside the list container */
+    border-radius: var(--input-border-radius); /* Match input field corner radius */
+    background-color: var(--background-secondary); /* Slightly different background for the list area */
+}
+
+/* Style for each individual item (folder or file) in the list */
+.lofi-browser-list-item {
+    display: flex; /* Arrange icon and name side-by-side */
+    align-items: center; /* Vertically align icon and name */
+    padding: 4px 8px; /* Padding inside each list item */
+    margin-bottom: 2px; /* Space between list items */
+    border-radius: var(--button-border-radius); /* Small rounded corners */
+    transition: background-color 0.1s ease; /* Smooth hover effect */
+}
+
+/* Style for the icon span within a list item */
+.lofi-browser-item-icon {
+    margin-right: 8px; /* Space between icon and name */
+    /* Optional: Adjust icon size or color */
+    font-size: 1.1em;
+    color: var(--icon-color); /* Use theme icon color */
+}
+
+/* Style for the name span within a list item */
+.lofi-browser-item-name {
+    flex-grow: 1; /* Allow the name to take up available space */
+    user-select: none; /* Prevent text selection when clicking */
+    white-space: nowrap; /* Prevent name from wrapping */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Show ellipsis (...) for truncated names */
+}
+
+/* Style specific to folder items (clickable) */
+.lofi-browser-item-folder {
+    cursor: pointer; /* Indicate clickable */
+    /* background-color: var(--background-secondary); /* Optional: Different background for folders */
+}
+
+/* Hover effect for folder items */
+.lofi-browser-item-folder:hover {
+    background-color: var(--background-modifier-hover); /* Hover background color */
+    color: var(--text-accent); /* Optional: Change text color on hover */
+}
+
+/* Style specific to file items (not clickable for navigation) */
+.lofi-browser-item-file {
+    opacity: 0.8; /* Slightly dim file items to distinguish from folders */
+    cursor: default; /* Explicitly show default cursor */
+}
+
+/* Style for error messages within the browser */
+.lofi-browser-error {
+    color: var(--text-error); /* Use error text color (red) */
+    padding: 10px;
+    text-align: center;
+}
+
+/* --- End Styles for the Custom Folder Browser UI --- */
+
+
+/* You can keep your existing styles for the ribbon icon etc. below this */
+
+.lofi-plugin-ribbon-icon {
+    /* Add your styles for the ribbon icon here */
+    /* For example: */
+    /* fill: purple; */
+}
+
+/* Styles for the status bar item if you want to customize it */
+/* .status-bar-item { ... } */
+
+/* styles.css (add these below the folder browser styles) */
+
+/* --- Styles for the Track List --- */
+
+.lofi-track-list {
+    border: 1px solid var(--background-modifier-border); /* Border around the list */
+    max-height: 150px; /* Set a max height to make it scrollable */
+    overflow-y: auto; /* Add scrollbar if content exceeds height */
+    padding: 5px; /* Padding inside */
+    border-radius: var(--input-border-radius); /* Match other elements */
+    background-color: var(--background-secondary); /* Same background as folder list */
+    margin-top: 10px; /* Space above the list */
+}
+
+.lofi-track-list-empty {
+    padding: 10px;
+    text-align: center;
+    color: var(--text-muted); /* Muted text color */
+}
+
+.lofi-track-list-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    margin-bottom: 2px;
+    border-radius: var(--button-border-radius);
+    transition: background-color 0.1s ease;
+    cursor: pointer; /* Indicate clickable */
+}
+
+.lofi-track-list-item:hover {
+    background-color: var(--background-modifier-hover); /* Hover effect */
+}
+
+/* Style for the track name text */
+.lofi-track-name {
+     flex-grow: 1; /* Allow name to take space */
+     white-space: nowrap; /* Prevent name from wrapping */
+     overflow: hidden; /* Hide overflowing text */
+     text-overflow: ellipsis; /* Show ellipsis (...) for truncated names */
+}
+
+
+/* Style for the currently playing track item */
+.lofi-track-item-playing {
+    background-color: var(--interactive-accent); /* Use accent color for the playing track */
+    color: var(--text-inverted); /* Inverted text color */
+    font-weight: bold; /* Bold text for playing track */
+}
+
+.lofi-track-item-playing .lofi-track-name {
+     /* Ensure name color is inverted too */
+     color: var(--text-inverted);
+}
+
+.lofi-track-item-playing:hover {
+     /* Adjust hover effect for the playing item */
+     background-color: var(--interactive-accent-hover);
+}
