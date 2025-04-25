@@ -10,5 +10,7 @@ export const DEFAULT_LOFI_SETTINGS: LofiPluginSettings = {
     workDuration: 25, // Default work session: 25 minutes
     restDuration: 5, // Default rest session: 5 minutes
 
-    // Add defaults for other settings here
+    // --- NEW: Default Animation Settings ---
+    animationEnabled: false, // Animation is off by default
+    // --- END NEW ---
 }

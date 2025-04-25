@@ -315,3 +315,58 @@ If your plugin does not need CSS, delete this file.
 /* .status-bar-item:not(.lofi-control-button):not(.lofi-timer-display) { ... } */
 
 
+/* styles.css (add these below other styles) */
+
+/* --- Styles for Status Bar Playback Controls (Audio) --- */
+
+/* Style for each individual status bar item used as a control button */
+.status-bar-item.lofi-control-button {
+    cursor: pointer;
+    padding: 0 8px;
+    border-radius: 4px;
+    transition: background-color 0.1s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-bar-item.lofi-control-button:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+/* Specific styles if needed */
+/* .status-bar-item.lofi-prev-button { ... } */
+/* .status-bar-item.lofi-play-pause-button { ... } */
+/* .status-bar-item.lofi-next-button { ... } */
+/* .status-bar-item.lofi-timer-play-pause-button { ... } */
+/* .status-bar-item.lofi-timer-reset-button { ... } */
+
+
+/* Style for the main status bar text item (Audio Status) */
+/* .status-bar-item:not(.lofi-control-button):not(.lofi-timer-display) { ... } */
+
+
+/* --- Styles for Timer Status Bar Items --- */
+
+/* Style for the timer display text element */
+.status-bar-item.lofi-timer-display {
+    font-weight: bold;
+    margin-left: 15px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+}
+
+/* --- NEW: Styles for Animation Canvas --- */
+.lofi-animation-canvas {
+    /* Styles are primarily set in main.ts, but defining the class is good practice */
+    /* These styles ensure it acts as a fixed overlay */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0; /* Or 1, below most Obsidian UI elements */
+    pointer-events: none; /* Crucial: allows clicks/interaction with UI elements behind the canvas */
+}
+/* --- END NEW --- */

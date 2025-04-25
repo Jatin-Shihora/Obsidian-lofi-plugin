@@ -8,5 +8,8 @@ export interface LofiPluginSettings {
     workDuration: number; // Duration of the work session in minutes
     restDuration: number; // Duration of the rest session in minutes
 
-    // Add other settings here as features are added (e.g., youtubeUrl, animationEnabled, cueSound, longBreakDuration)
+    // --- NEW: Animation Settings ---
+    animationEnabled: boolean; // Toggle to enable/disable the animation
+    // Add settings for animation type (leaves, rain), density, speed, etc. later
+    // --- END NEW ---
 }
