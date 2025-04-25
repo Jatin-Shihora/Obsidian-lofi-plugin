@@ -8,12 +8,10 @@ import {
     TFolder,
     TFile,
     TAbstractFile,
-    Modal // Modal might be used if you show modals from settings, though SampleModal is separate
 } from 'obsidian';
 
-import LofiPlugin from './main'; // Import the main Plugin class for type hinting and access
+import LofiPlugin from './main'; // Import the main Plugin class
 import { LofiPluginSettings } from './types'; // Import the settings interface
-// import { DEFAULT_LOFI_SETTINGS } from './defaults'; // Often not needed in the tab itself
 
 // Plugin Settings Tab class
 // This class defines the UI that appears when the user clicks the plugin in the Obsidian Settings menu.
@@ -375,7 +373,6 @@ export class LofiSettingTab extends PluginSettingTab { // Export the class so ma
 
          // Check if the current path is the vault root ('' or '/') OR if it resolves to a valid folder (instanceof TFolder)
          if (this.currentBrowsePath === '' || this.currentBrowsePath === '/' || folder instanceof TFolder) {
-             // Get the path to save. Normalize it before storing.
              const path = normalizePath(this.currentBrowsePath);
 
              // Update the audioFolderPath setting in the plugin's memory
@@ -483,18 +480,4 @@ export class LofiSettingTab extends PluginSettingTab { // Export the class so ma
 
     // --- End Methods for Track List Display and Interaction ---
 
-
-    // --- Helper methods for the main Plugin functionality ---
-    // These methods belong to LofiPlugin, not LofiSettingTab.
-    // They are called by LofiSettingTab methods via 'this.plugin'.
-
-    // Helper method for random numbers (unused currently)
-    // getRandomNumber(min: number = 10000, max: number = 99999): number { ... } // Defined in LofiPlugin
-
-    // loadSettings, saveSettings, onload, onunload methods also belong to LofiPlugin
-
-
-    // Note: The methods listed in this comment block are defined within the LofiPlugin class definition,
-    // NOT within the LofiSettingTab class definition. The LofiSettingTab interacts
-    // with these methods via its 'plugin' property (e.g., this.plugin.setVolume(...)).
 }

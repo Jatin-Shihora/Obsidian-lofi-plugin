@@ -206,3 +206,112 @@ If your plugin does not need CSS, delete this file.
      /* Adjust hover effect for the playing item */
      background-color: var(--interactive-accent-hover);
 }
+
+/* styles.css (add these below the track list styles) */
+
+/* --- Styles for Playback Controls --- */
+
+.lofi-playback-controls {
+    margin-top: 10px; /* Space above the controls */
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border); /* Separator line */
+}
+
+.lofi-playback-buttons-container {
+    display: flex; /* Arrange buttons in a row */
+    gap: 10px; /* Space between buttons */
+    justify-content: center; /* Center the buttons */
+    align-items: center;
+    margin-bottom: 10px; /* Space below the button row */
+}
+
+.lofi-playback-button {
+    /* Basic button styling - similar to navigation buttons */
+    padding: 5px 12px;
+    cursor: pointer;
+    border: 1px solid var(--interactive-accent);
+    border-radius: var(--button-border-radius);
+    background-color: var(--background-primary-alt);
+    color: var(--text-normal);
+    font-size: var(--font-ui-normal);
+    line-height: 1;
+    transition: background-color 0.15s ease;
+}
+
+.lofi-playback-button:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+/* Optional: Specific styles for Prev/Next if needed */
+.lofi-prev-button { /* ... */ }
+.lofi-next-button { /* ... */ }
+
+/* Optional: Style for shuffle toggle if added later */
+/* .lofi-shuffle-toggle .setting-item-control { ... } */
+
+/* styles.css (add these below other styles) */
+
+/* --- Styles for Status Bar Playback Controls --- */
+
+/* Style for each individual status bar item used as a control button */
+.status-bar-item.lofi-control-button {
+    /* Make it look like a button/icon */
+    cursor: pointer;
+    padding: 0 8px; /* Add some padding around the text/icon */
+    /* Inherit text/color from status bar */
+    /* Optional: Add subtle background/border on hover */
+    border-radius: 4px; /* Small rounded corners */
+    transition: background-color 0.1s ease;
+}
+
+.status-bar-item.lofi-control-button:hover {
+    background-color: var(--background-modifier-hover); /* Highlight on hover */
+}
+
+/* Specific styles if needed (e.g., different colors) */
+/* .status-bar-item.lofi-prev-button { ... } */
+/* .status-bar-item.lofi-play-pause-button { ... } */
+/* .status-bar-item.lofi-next-button { ... } */
+
+/* If using SVG icons, you might need styles for the svg element inside */
+/* .status-bar-item.lofi-control-button svg { fill: var(--icon-color); width: 18px; height: 18px; vertical-align: middle; } */
+
+
+/* Style for the main status bar text item */
+/* .status-bar-item:not(.lofi-control-button) { ... } */
+
+/* styles.css (add these below other styles) */
+
+/* --- Styles for Timer Status Bar Items --- */
+
+/* Style for the timer display text element */
+.status-bar-item.lofi-timer-display {
+    /* Inherit font/color from status bar */
+    font-weight: bold; /* Make the time display prominent */
+    margin-left: 15px; /* Add space to the left to separate from audio controls */
+    padding: 0 8px; /* Add padding */
+     /* Optional: Add a border or background */
+    /* border: 1px solid var(--background-modifier-border); */
+    /* border-radius: var(--button-border-radius); */
+    /* background-color: var(--background-secondary); */
+}
+
+/* Style for the timer control buttons */
+/* Re-uses .lofi-control-button from audio controls, adds specific styles */
+.status-bar-item.lofi-timer-control-button {
+     /* Any styles specific to timer buttons if they differ from audio controls */
+     /* e.g., different color */
+     /* color: var(--interactive-accent); */
+}
+
+/* Specific styles for Play/Pause timer button */
+/* .status-bar-item.lofi-timer-play-pause-button { ... } */
+
+/* Specific styles for Reset timer button */
+/* .status-bar-item.lofi-timer-reset-button { ... } */
+
+
+/* Ensure default status bar items still look normal */
+/* .status-bar-item:not(.lofi-control-button):not(.lofi-timer-display) { ... } */
+
+

@@ -6,365 +6,713 @@ import { LofiPluginSettings } from './types';
 import { DEFAULT_LOFI_SETTINGS } from './defaults';
 
 // Import component classes
-import { SampleModal } from './modal'; // Assuming SampleModal is exported
-import { LofiSettingTab } from './settings-tab'; // Assuming LofiSettingTab is exported
+import { SampleModal } from './modal';
+import { LofiSettingTab } from './settings-tab';
 
+// --- Define Timer States ---
+type TimerState = 'stopped' | 'working' | 'resting' | 'paused';
+type SessionType = 'work' | 'rest';
+// --- End Define Timer States ---
 
 // Main Plugin class
 export default class LofiPlugin extends Plugin {
 	settings: LofiPluginSettings; // Holds the plugin's settings (type imported from types.ts)
 	private audioPlayer: HTMLAudioElement | null = null; // HTML Audio element for playback
-    private statusBarItemEl: HTMLElement | null = null; // Status bar element reference
+    private statusBarItemEl: HTMLElement | null = null; // Existing status bar item for *audio* text status
+    // Status bar items for playback controls (Audio)
+    private prevButtonEl: HTMLElement | null = null;
+    private playPauseButtonEl: HTMLElement | null = null;
+    private nextButtonEl: HTMLElement | null = null;
+
     public playlist: string[] = []; // Array to store vault paths of audio files (Public for Settings Tab access)
-    private currentTrackIndex: number = -1; // State variable to track the index of the currently loaded/playing track
+    private currentTrackIndex: number = -1; // State variable for current track index
+
+    // --- NEW: Timer State Properties ---
+    private timerState: TimerState = 'stopped';
+    private remainingTime: number = 0; // Time in seconds
+    private timerIntervalId: number | null = null; // ID returned by setInterval
+    private currentSessionType: SessionType = 'work'; // Start with a work session by default
+    // --- END NEW ---
+
+    // --- NEW: Status bar items for Timer Controls and Display ---
+    private timerDisplayEl: HTMLElement | null = null;
+    private timerPlayPauseButtonEl: HTMLElement | null = null;
+    private timerResetButtonEl: HTMLElement | null = null;
+    // --- END NEW ---
+
 
 	// Called when the plugin is enabled
 	async onload() {
-		await this.loadSettings(); // Load plugin settings from data.json
+		await this.loadSettings();
 
-		console.log('Loading Obsidian Lofi Plugin'); // Log plugin loading
+		console.log('Loading Obsidian Lofi Plugin');
 
-		// Create the HTML Audio element that will handle playback
 		this.audioPlayer = new Audio();
 
-		// Set initial volume from settings AFTER loading settings
+        // Add event listeners for audio player state changes
+        this.audioPlayer.addEventListener('ended', () => {
+            console.log('Audio playback ended. Playing next track...');
+            this.playNextTrack(); // Auto-play next track
+        });
+
+        this.audioPlayer.addEventListener('play', () => {
+            console.log('Audio playing');
+             this.updatePlayPauseButton(true); // Update audio button state to Paused (since it's now playing)
+             // Status bar text is updated in playTrackByPath or togglePlayback
+        });
+
+        this.audioPlayer.addEventListener('pause', () => {
+            console.log('Audio paused');
+            this.updatePlayPauseButton(false); // Update audio button state to Play
+             // Status bar text is updated in togglePlayback
+        });
+
+
 		this.setVolume(this.settings.volume);
 
-        // Trigger initial folder scan on load if a folder path is set in settings
         if (this.settings.audioFolderPath) {
-            // Normalize the path from settings before scanning to handle different OS path formats
             const normalizedPath = normalizePath(this.settings.audioFolderPath);
-            // Use await because scanAudioFolder is an async method
             await this.scanAudioFolder(normalizedPath);
         } else {
-             // Update status bar immediately if no audio folder path is configured
              this.updateStatusBar('Lofi: No folder set');
         }
 
-        // After potential scan, set the initial audio source if the playlist is not empty
-        // This will load the first track found when the plugin loads or the setting is initially valid.
+        // Set initial audio source after scan
         if (this.playlist.length > 0 && this.audioPlayer) {
-             // If playlist has items, ensure currentTrackIndex is set (defaulting to 0 if it's -1)
              if (this.currentTrackIndex === -1 || this.currentTrackIndex >= this.playlist.length) {
-                 this.currentTrackIndex = 0;
+                 this.currentTrackIndex = 0; // Default to first track if index is invalid
              }
              const initialTrackVaultPath = this.playlist[this.currentTrackIndex];
-             // Use Obsidian's adapter to get the webview-accessible app:// path from the vault path
              const initialTrackAppPath = this.app.vault.adapter.getResourcePath(initialTrackVaultPath);
-             this.audioPlayer.src = initialTrackAppPath; // Set the audio source
+             this.audioPlayer.src = initialTrackAppPath;
 
              console.log('Set initial audio source from playlist:', initialTrackAppPath);
 
-             // Update status bar to show the initial track is ready to play
-             // Extract just the filename from the vault path for display
              const initialTrackName = initialTrackVaultPath.split('/').pop() || 'Unknown Track';
              this.updateStatusBar(`Lofi Ready || ${initialTrackName}`);
         } else if (!this.settings.audioFolderPath){
-             // If no folder path was set initially, status is already 'No folder set'.
+             // Status already set
         }
-        else { // Path was set, but scanAudioFolder found no MP3 files
+        else { // Path was set, but no files found
              console.warn('No audio files found in the specified folder.');
              this.updateStatusBar('Lofi: No files found');
         }
 
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('music', 'Toggle Lofi Playback', (evt: MouseEvent) => {
-			// --- Ribbon Icon Click Handler Logic ---
-			// Check if the audio player instance exists
-			if (!this.audioPlayer) {
-				new Notice('Audio player not initialized.');
-				return;
-			}
-
-            // Before attempting to play/pause, check if a track is loaded and playable
-            // Check if src is set, is not the default window URL, if the playlist is not empty, and if currentTrackIndex is valid
-            const isTrackLoaded = this.audioPlayer.src && this.audioPlayer.src !== window.location.href;
-            const isPlaylistReady = this.playlist.length > 0 && this.currentTrackIndex !== -1 && this.currentTrackIndex < this.playlist.length;
+		// Ribbon Icon
+		const ribbonIconEl = this.addRibbonIcon('music', 'Toggle Lofi Playback', () => this.togglePlayback());
+		ribbonIconEl.addClass('lofi-plugin-ribbon-icon');
 
 
-            if (!isTrackLoaded || !isPlaylistReady) {
-                 new Notice('No Lofi track loaded. Check settings and folder.');
-                 if (!this.settings.audioFolderPath || this.playlist.length === 0) {
-                     console.warn('Audio folder not set or playlist is empty.');
-                     this.updateStatusBar('Lofi: No files/folder');
-                 } else if (this.currentTrackIndex === -1 || this.currentTrackIndex >= this.playlist.length) {
-                      console.warn('Playlist is ready, but no valid track index is set.');
-                     this.updateStatusBar('Lofi: Index Error');
-                 } else {
-                      console.warn('Audio source is not set correctly.');
-                      this.updateStatusBar('Lofi: Source Error');
-                 }
-                 return; // Exit the handler if no track is properly loaded
-            }
-
-            // Get the name of the current track for status updates using currentTrackIndex
-            const currentTrackPath = this.playlist[this.currentTrackIndex];
-            const currentTrackName = currentTrackPath.split('/').pop() || 'Unknown Track'; // Extract filename from path
-
-
-			// Check if the audio is currently paused
-			if (this.audioPlayer.paused) {
-				// If paused, attempt to play
-				this.audioPlayer.play()
-					.then(() => {
-						// This block runs if play() is successful
-						new Notice('Lofi playing...');
-                        this.updateStatusBar(`Playing: ${currentTrackName}`); // Update status bar on play success
-					})
-					.catch(error => {
-						// This block runs if play() fails (e.g., user gesture required, format error)
-						console.error('Error playing audio (after play()):', error);
-						new Notice('Failed to play Lofi audio after calling play(). Check console for details.');
-                        this.updateStatusBar('Lofi Play Error 😢'); // Update status bar on play error
-					});
-			} else {
-				// If not paused (i.e., playing), pause it
-				this.audioPlayer.pause();
-				new Notice('Lofi paused.');
-                this.updateStatusBar(`Lofi Paused || ${currentTrackName}`); // Update status bar on pause
-			}
-             // --- End Ribbon Icon Click Handler Logic ---
-		});
-		ribbonIconEl.addClass('lofi-plugin-ribbon-icon'); // Add a custom CSS class for styling the ribbon icon
-
-
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		// Store the reference to the status bar element so we can update its text later
+		// --- Add Status Bar Items ---
+        // Audio Status Text
 		this.statusBarItemEl = this.addStatusBarItem();
-		// Set an initial status bar text. This will be updated after the folder scan completes.
 		this.updateStatusBar('Lofi Ready');
 
+        // Audio Playback Controls
+        this.prevButtonEl = this.addStatusBarItem();
+        this.prevButtonEl.addClass('lofi-control-button'); // Use general class for styling
+        this.prevButtonEl.addClass('lofi-prev-button'); // Specific class
+        this.prevButtonEl.setText('⏮'); // Simple text icon (can replace with SVG later)
+        this.prevButtonEl.ariaLabel = 'Previous Track'; // Accessibility label
+        this.prevButtonEl.addEventListener('click', () => this.playPreviousTrack()); // Add click listener
 
-		// This adds a command that can be triggered anywhere via the Command Palette (Cmd/Ctrl+P)
-		this.addCommand({
-			id: 'lofi-plugin-toggle-playback', // Unique identifier for the command
-			name: 'Toggle Lofi Playback', // User-friendly name in Command Palette
-			callback: () => {
-				// Trigger the same logic as the ribbon icon click
-				const ribbonCallback = ribbonIconEl.onclick; // Get the click handler function
-				if (ribbonCallback) {
-                    ribbonCallback(new MouseEvent('click')); // Execute the click handler, pass a dummy MouseEvent
-                }
-			}
+        this.playPauseButtonEl = this.addStatusBarItem();
+        this.playPauseButtonEl.addClass('lofi-control-button');
+        this.playPauseButtonEl.addClass('lofi-play-pause-button');
+        this.updatePlayPauseButton(this.audioPlayer.paused); // Set initial state based on player state (true if paused, false if playing)
+        this.playPauseButtonEl.ariaLabel = 'Toggle Playback';
+        this.playPauseButtonEl.addEventListener('click', () => this.togglePlayback());
+
+        this.nextButtonEl = this.addStatusBarItem();
+        this.nextButtonEl.addClass('lofi-control-button');
+        this.nextButtonEl.addClass('lofi-next-button');
+        this.nextButtonEl.setText('⏭'); // Simple text icon (can replace with SVG later)
+        this.nextButtonEl.ariaLabel = 'Next Track';
+        this.nextButtonEl.addEventListener('click', () => this.playNextTrack());
+
+        // --- NEW: Timer Status Bar Items ---
+        // Timer Display
+        this.timerDisplayEl = this.addStatusBarItem();
+        this.timerDisplayEl.addClass('lofi-timer-display');
+        this.updateTimerDisplay(); // Set initial timer text (e.g., "Timer: Stopped")
+
+        // Timer Play/Pause Button
+        this.timerPlayPauseButtonEl = this.addStatusBarItem();
+        this.timerPlayPauseButtonEl.addClass('lofi-control-button'); // Re-use control button class
+        this.timerPlayPauseButtonEl.addClass('lofi-timer-play-pause-button'); // Specific class
+        this.timerPlayPauseButtonEl.ariaLabel = 'Start Timer'; // Initial label
+        this.timerPlayPauseButtonEl.addEventListener('click', () => {
+             if (this.timerState === 'stopped' || this.timerState === 'paused') {
+                 this.startTimer();
+             } else { // 'working' or 'resting'
+                 this.pauseTimer();
+             }
+        });
+        this.updateTimerControls(); // Set initial state of timer buttons (Play icon, visible)
+
+         // Timer Reset Button
+        this.timerResetButtonEl = this.addStatusBarItem();
+        this.timerResetButtonEl.addClass('lofi-control-button'); // Re-use control button class
+        this.timerResetButtonEl.addClass('lofi-timer-reset-button'); // Specific class
+        this.timerResetButtonEl.setText('🔄'); // Reset icon
+        this.timerResetButtonEl.ariaLabel = 'Reset Timer'; // Accessibility label
+        this.timerResetButtonEl.addEventListener('click', () => this.resetTimer()); // Add click listener
+        // --- END NEW ---
+        // --- End Status Bar Items ---
+
+
+		// Add Commands
+        this.addCommand({
+			id: 'lofi-plugin-toggle-playback',
+			name: 'Toggle Lofi Playback',
+			callback: () => this.togglePlayback()
 		});
+        this.addCommand({
+            id: 'lofi-plugin-play-next-track',
+            name: 'Play Next Lofi Track',
+            callback: () => this.playNextTrack()
+        });
+         this.addCommand({
+            id: 'lofi-plugin-play-previous-track',
+            name: 'Play Previous Lofi Track',
+            callback: () => this.playPreviousTrack()
+        });
+         // --- NEW: Add Commands for Timer Controls ---
+        this.addCommand({
+             id: 'lofi-plugin-start-timer',
+             name: 'Start Focus Timer',
+             callback: () => this.startTimer()
+        });
+        this.addCommand({
+             id: 'lofi-plugin-pause-timer',
+             name: 'Pause Focus Timer',
+             callback: () => this.pauseTimer()
+        });
+        this.addCommand({
+             id: 'lofi-plugin-reset-timer',
+             name: 'Reset Focus Timer',
+             callback: () => this.resetTimer()
+        });
+         // --- END NEW ---
 
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		// Register our custom settings tab class, imported from settings-tab.ts
+
+		// Add the settings tab
 		this.addSettingTab(new LofiSettingTab(this.app, this));
 
-        // console.log('loading plugin'); // Removed redundant log as onload log is above
+        // --- REMOVED: This line hid timer controls initially. They are visible by default now. ---
+        // this.setTimerControlsVisibility(false);
 	}
 
-	// Called when the plugin is disabled (e.g., user disables it, Obsidian closes)
+	// Called when the plugin is disabled
 	onunload() {
-		console.log('Unloading Obsidian Lofi Plugin'); // Log plugin unloading
-        this.updateStatusBar('Lofi Unloaded'); // Update status bar to indicate unloading state
+		console.log('Unloading Obsidian Lofi Plugin');
+        this.updateStatusBar('Lofi Unloaded');
 
-		// Clean up the audio player to stop playback and release resources
+		// Clean up the audio player
 		if (this.audioPlayer) {
-			this.audioPlayer.pause(); // Stop playback immediately
-			this.audioPlayer.src = ''; // Clear the audio source
-			// If the audio element was explicitly added to the DOM (e.g., in a view or modal), remove it here if necessary.
-			this.audioPlayer = null; // Clear the reference to the audio player instance
+			this.audioPlayer.pause();
+			this.audioPlayer.src = '';
+			this.audioPlayer = null;
 		}
 
-        // Clear references to UI elements and data that belong to this plugin instance
-        this.statusBarItemEl = null; // Clear status bar reference
-        this.playlist = []; // Clear the playlist
-        this.currentTrackIndex = -1; // Reset track index
+        // Clear timer interval on unload
+        if (this.timerIntervalId !== null) {
+             clearInterval(this.timerIntervalId);
+        }
+
+        // Clear references and state
+        this.statusBarItemEl = null;
+        this.prevButtonEl = null;
+        this.playPauseButtonEl = null;
+        this.nextButtonEl = null;
+        // Clear timer status bar references
+        this.timerDisplayEl = null;
+        this.timerPlayPauseButtonEl = null;
+        this.timerResetButtonEl = null;
+        // Reset timer state
+        this.timerState = 'stopped';
+        this.remainingTime = 0;
+        this.timerIntervalId = null;
+        this.currentSessionType = 'work';
 	}
 
-	// --- Plugin Core Methods ---
+	// --- Plugin Core Methods (Audio) ---
 
-    // Async method to load plugin settings from Obsidian's data.json file
 	async loadSettings() {
-		// Read data from storage. If the file doesn't exist or is empty, loadData() returns null or undefined.
-		const data = (await this.loadData()) || {}; // Use || {} to ensure `data` is always an object
-
-		// Merge loaded data with default settings.
-		// Object.assign creates a new object. Properties from 'data' overwrite properties from 'DEFAULT_LOFI_SETTINGS'.
-		// This is important for handling new settings added in future plugin versions.
-		// We import DEFAULT_LOFI_SETTINGS from defaults.ts
+		const data = (await this.loadData()) || {};
 		this.settings = Object.assign({}, DEFAULT_LOFI_SETTINGS, data);
 	}
 
-    // Async method to save the current plugin settings to Obsidian's data.json file
 	async saveSettings() {
-		// Save the current settings object (`this.settings`) to disk
 		await this.saveData(this.settings);
 	}
 
-    // Private helper method to update the text displayed in the status bar item
+    // Updates the *audio* status bar text
     private updateStatusBar(text: string) {
-        // Check if the status bar element reference exists before trying to set text
         if (this.statusBarItemEl) {
             this.statusBarItemEl.setText(text);
         }
     }
 
-    // Public method to set the audio player volume
-    // This is called from the settings tab and potentially other places
-    // Accepts a volume level from 0 to 100 (inclusive)
     public setVolume(volume: number) {
         if (this.audioPlayer) {
-            // Clamp the input volume value to be within the acceptable range [0, 100]
             const clampedVolume = Math.max(0, Math.min(100, volume));
-            // HTML audio volume is a float between 0.0 and 1.0. Convert the 0-100 input.
             this.audioPlayer.volume = clampedVolume / 100;
             console.log(`Lofi volume set to ${clampedVolume}%`);
-            // Optional: Add logic here to visually indicate the volume level (e.g., in the status bar or a separate UI element)
         }
     }
 
-    // Public async method to scan the specified folder path for MP3 files
-    // This method is called from onload and from the settings tab when the folder setting changes.
-    // It populates the 'playlist' property.
-    public async scanAudioFolder(folderPath: string) {
-        this.playlist = []; // Start with an empty playlist
+    // Refactored logic to toggle playback state (Audio)
+    public togglePlayback(): void {
+        if (!this.audioPlayer) {
+            new Notice('Audio player not initialized.');
+            return;
+        }
 
-        // Normalize the folder path provided as input. This helps handle paths consistently across different OS.
+        const isTrackLoaded = this.audioPlayer.src && this.audioPlayer.src !== window.location.href;
+        const isPlaylistReady = this.playlist.length > 0 && this.currentTrackIndex !== -1 && this.currentTrackIndex < this.playlist.length;
+
+        if (!isTrackLoaded || !isPlaylistReady) {
+             new Notice('No Lofi track loaded. Check settings and folder.');
+             if (!this.settings.audioFolderPath || this.playlist.length === 0) {
+                 this.updateStatusBar('Lofi: No files/folder');
+             } else if (this.currentTrackIndex === -1 || this.currentTrackIndex >= this.playlist.length) {
+                  this.updateStatusBar('Lofi: Index Error');
+             } else {
+                  this.updateStatusBar('Lofi: Source Error');
+             }
+             return;
+        }
+
+        const currentTrackPath = this.playlist[this.currentTrackIndex];
+        const currentTrackName = currentTrackPath.split('/').pop() || 'Unknown Track';
+
+
+        if (this.audioPlayer.paused) {
+            this.audioPlayer.play()
+                .then(() => {
+                    new Notice('Lofi playing...');
+                    this.updateStatusBar(`Playing: ${currentTrackName}`);
+                })
+                .catch(error => {
+                    console.error('Error playing audio (togglePlayback):', error);
+                    new Notice('Failed to play Lofi audio. Check console.');
+                    this.updateStatusBar('Lofi Play Error 😢');
+                });
+        } else {
+            this.audioPlayer.pause();
+            new Notice('Lofi paused.');
+            this.updateStatusBar(`Lofi Paused || ${currentTrackName}`);
+        }
+    }
+
+    // Helper to update the text/icon of the status bar Play/Pause button (Audio)
+    private updatePlayPauseButton(isPlaying: boolean): void {
+        if (this.playPauseButtonEl) {
+            // Use text icons for simplicity. Can replace with SVG icons later.
+            this.playPauseButtonEl.setText(isPlaying ? '⏸' : '▶'); // Pause icon if playing, Play icon if paused
+            this.playPauseButtonEl.ariaLabel = isPlaying ? 'Pause' : 'Play'; // Update accessibility label
+        }
+    }
+
+
+    public async scanAudioFolder(folderPath: string) {
+        this.playlist = [];
+
         const normalizedFolderPath = normalizePath(folderPath);
 
-        // Check if the normalized path is empty or just the vault root symbol.
-        // We consider an empty or root path as "no valid folder set" for audio files.
         if (!normalizedFolderPath || normalizedFolderPath === '/') {
             console.log('No valid audio folder path specified.');
             this.updateStatusBar('Lofi: No folder set');
-             // Clear the audio player source if the path is cleared
-             if (this.audioPlayer) {
-                this.audioPlayer.src = '';
-             }
-             this.currentTrackIndex = -1; // Reset index if folder is cleared
-            return; // Exit the function if the path is invalid or empty
-        }
-
-        try {
-            // Get the abstract file object from the vault based on the normalized path.
-            // This can return a TFile, TFolder, or null if the path doesn't exist.
-            const folder = this.app.vault.getAbstractFileByPath(normalizedFolderPath);
-
-            // Check if the retrieved object is actually a folder (an instance of TFolder)
-            if (folder instanceof TFolder) {
-                // Iterate through all children (files and subfolders) within the specified folder
-                for (const file of folder.children) {
-                    // Check if the item is a file (TFile) AND its extension is 'mp3' (case-insensitive)
-                    if (file instanceof TFile && file.extension.toLowerCase() === 'mp3') {
-                        this.playlist.push(file.path); // Add the file's vault path to our playlist array
-                        console.log(`Found MP3 file: ${file.path}`);
-                    }
-                }
-                console.log(`Finished scanning. Found ${this.playlist.length} MP3 files.`);
-                // Update the status bar to show the number of files found
-                this.updateStatusBar(`Lofi: ${this.playlist.length} files found`);
-
-                // After scan, update currentTrackIndex. If playlist has items, default to index 0.
-                if (this.playlist.length > 0) {
-                     this.currentTrackIndex = 0;
-                     // Update audio source if player exists and is paused
-                     if (this.audioPlayer && this.audioPlayer.paused) {
-                         const firstTrackVaultPath = this.playlist[this.currentTrackIndex];
-                         // Convert the vault path to a webview-accessible app:// path using getResourcePath
-                         const firstTrackAppPath = this.app.vault.adapter.getResourcePath(firstTrackVaultPath);
-                         this.audioPlayer.src = firstTrackAppPath; // Set the audio player's source
-                         console.log('Set audio source to first track after scan:', firstTrackAppPath);
-                         const firstTrackName = firstTrackVaultPath.split('/').pop() || 'Unknown Track'; // Extract filename
-                          this.updateStatusBar(`Lofi Ready || ${firstTrackName}`);
-                     } else if (this.audioPlayer && !this.audioPlayer.paused) {
-                          // If audio is already playing, don't interrupt its playback source,
-                          // but update the currentTrackIndex to point to the first item in the new playlist.
-                          // The user would need to pause/play or use navigation controls to switch.
-                          console.log(`Audio already playing. Found ${this.playlist.length} tracks. Set index to 0 for new playlist.`);
-                     }
-
-                } else { // Playlist is empty
-                     if (this.audioPlayer) {
-                        this.audioPlayer.src = ''; // Clear source
-                     }
-                     this.currentTrackIndex = -1; // Reset index
-                     this.updateStatusBar('Lofi: No files found');
-                }
-
-            } else {
-                // If the path exists but is not a folder (e.g., a file), or the path is null
-                console.error('The specified path is not a valid folder:', normalizedFolderPath);
-                // Provide a user-friendly notice using the original input path
-                new Notice(`Error: "${folderPath}" is not a valid folder.`);
-                this.updateStatusBar('Lofi: Invalid folder'); // Update status bar
-                 // Clear player source if the path is invalid
-                 if (this.audioPlayer) {
-                    this.audioPlayer.src = '';
-                 }
-                 this.currentTrackIndex = -1;
-            }
-
-        } catch (error) {
-            // Catch any errors that occur during file system operations (e.g., permissions, path doesn't exist)
-            console.error('Error scanning audio folder:', error);
-            new Notice(`Error scanning folder "${folderPath}". Check console for details.`); // User notice
-            this.updateStatusBar('Lofi: Scan Error'); // Update status bar
-             // Clear player source on scan error
              if (this.audioPlayer) {
                 this.audioPlayer.src = '';
              }
              this.currentTrackIndex = -1;
+             this.setPlaybackControlsVisibility(false); // Hide audio controls
+            return;
+        }
+
+        try {
+            const folder = this.app.vault.getAbstractFileByPath(normalizedFolderPath);
+
+            if (folder instanceof TFolder) {
+                for (const file of folder.children) {
+                    if (file instanceof TFile && file.extension.toLowerCase() === 'mp3') {
+                        this.playlist.push(file.path);
+                    }
+                }
+                console.log(`Finished scanning. Found ${this.playlist.length} MP3 files.`);
+                this.updateStatusBar(`Lofi: ${this.playlist.length} files found`);
+
+                if (this.playlist.length > 0) {
+                     this.currentTrackIndex = 0;
+                     if (this.audioPlayer && this.audioPlayer.paused) {
+                         const firstTrackVaultPath = this.playlist[this.currentTrackIndex];
+                         const firstTrackAppPath = this.app.vault.adapter.getResourcePath(firstTrackVaultPath);
+                         this.audioPlayer.src = firstTrackAppPath;
+                         console.log('Set audio source to first track after scan:', firstTrackAppPath);
+                         const firstTrackName = firstTrackVaultPath.split('/').pop() || 'Unknown Track';
+                          this.updateStatusBar(`Lofi Ready || ${firstTrackName}`);
+                     } else if (this.audioPlayer && !this.audioPlayer.paused) {
+                          console.log(`Audio already playing. Found ${this.playlist.length} tracks. Set index to 0 for new playlist.`);
+                     }
+                     this.setPlaybackControlsVisibility(true); // Show audio controls
+
+                } else { // Playlist is empty
+                     if (this.audioPlayer) {
+                        this.audioPlayer.src = '';
+                     }
+                     this.currentTrackIndex = -1;
+                     this.updateStatusBar('Lofi: No files found');
+                     this.setPlaybackControlsVisibility(false); // Hide audio controls
+                }
+
+            } else { // Path invalid or not a folder
+                console.error('The specified path is not a valid folder:', normalizedFolderPath);
+                new Notice(`Error: "${folderPath}" is not a valid folder.`);
+                this.updateStatusBar('Lofi: Invalid folder');
+                 if (this.audioPlayer) {
+                    this.audioPlayer.src = '';
+                 }
+                 this.currentTrackIndex = -1;
+                 this.setPlaybackControlsVisibility(false); // Hide audio controls
+            }
+
+        } catch (error) { // Scan error
+            console.error('Error scanning audio folder:', error);
+            new Notice(`Error scanning folder "${folderPath}". Check console for details.`);
+            this.updateStatusBar('Lofi: Scan Error');
+             if (this.audioPlayer) {
+                this.audioPlayer.src = '';
+             }
+             this.currentTrackIndex = -1;
+             this.setPlaybackControlsVisibility(false); // Hide audio controls
         }
     }
 
-    // Public method to play a specific track by its vault path.
-    // This is called from the settings tab when a track in the list is clicked.
+    // Plays a specific track by its vault path.
     public playTrackByPath(trackVaultPath: string): void {
-        // Basic checks
         if (!this.audioPlayer || this.playlist.length === 0) {
              new Notice('Cannot play track: Audio player not ready or playlist is empty.');
+             this.updateStatusBar('Lofi: Play Error');
              return;
         }
 
-        // Find the index of the clicked track's vault path in the current playlist
         const index = this.playlist.indexOf(trackVaultPath);
 
         if (index === -1) {
              console.error('Attempted to play track not found in playlist:', trackVaultPath);
              new Notice('Error: Selected track not found in playlist.');
              this.updateStatusBar('Lofi: Track Error');
-             return; // Exit if the track path isn't in the current playlist
+             return;
         }
 
-        // Update the current track index state variable to the index of the selected track
         this.currentTrackIndex = index;
-
-        // Get the webview-accessible app:// path for the selected track
         const trackAppPath = this.app.vault.adapter.getResourcePath(trackVaultPath);
-
-        // Set the audio player's source to the selected track's app:// path
         this.audioPlayer.src = trackAppPath;
 
-        // Attempt to play the audio. play() returns a Promise.
-        this.audioPlayer.play()
+         this.audioPlayer.play()
              .then(() => {
-                  // This block executes if the play attempt is successful
-                  const trackName = trackVaultPath.split('/').pop() || 'Unknown Track'; // Extract filename
-                  new Notice(`Playing: ${trackName}`); // Show a notice
-                  this.updateStatusBar(`Playing: ${trackName}`); // Update status bar
-                  // Note: The settings tab needs to visually update the playing track highlight if it's open
-                  // This happens via the updateTrackListPlayingState method called from the settings tab click handler.
+                  const trackName = trackVaultPath.split('/').pop() || 'Unknown Track';
+                  new Notice(`Playing: ${trackName}`);
+                  this.updateStatusBar(`Playing: ${trackName}`);
+                  // Play event listener updates the button state
              })
              .catch(error => {
-                  // This block executes if the play attempt fails (e.g., user gesture required, media element error)
                   console.error('Error playing selected track:', error);
-                  new Notice(`Failed to play "${trackVaultPath.split('/').pop()}". Check console for details.`);
-                  this.updateStatusBar('Lofi: Playback Error'); // Update status bar to show error
+                  new Notice(`Failed to play "${trackVaultPath.split('/').pop()}". Check console.`);
+                  this.updateStatusBar('Lofi: Playback Error');
+                  // Pause event listener updates the button state if play() fails after setting src
              });
+
+        // Note: Settings tab needs to update playing state highlight if open.
+        // The click handler in settings-tab.ts already calls updateTrackListPlayingState after calling playTrackByPath
     }
 
+    // Plays the next track in the playlist. Handles wrapping around.
+    public playNextTrack(): void {
+        if (!this.audioPlayer || this.playlist.length <= 1) {
+            console.warn('Cannot play next track: Playlist has less than 2 tracks.');
+             if (this.playlist.length === 0) {
+                  new Notice('Cannot play next track: Playlist is empty.');
+                  this.updateStatusBar('Lofi: Playlist Empty');
+             } else { // Only 1 track
+                  new Notice('Cannot play next track: Only one track in playlist.');
+                  this.updateStatusBar('Lofi: Single Track');
+             }
+            return;
+        }
 
-    // Public method to get the current track index in the playlist
-    // Returns the index of the currently loaded track. Returns -1 if no track is loaded.
-    public getCurrentTrackIndex(): number { // Public for Settings Tab access
+        this.currentTrackIndex++;
+        if (this.currentTrackIndex >= this.playlist.length) {
+            this.currentTrackIndex = 0; // Wrap around
+        }
+
+        const nextTrackVaultPath = this.playlist[this.currentTrackIndex];
+        console.log('Playing next track (index):', this.currentTrackIndex, nextTrackVaultPath);
+        this.playTrackByPath(nextTrackVaultPath);
+    }
+
+    // Plays the previous track in the playlist. Handles wrapping around.
+    public playPreviousTrack(): void {
+        if (!this.audioPlayer || this.playlist.length <= 1) {
+             console.warn('Cannot play previous track: Playlist has less than 2 tracks.');
+             if (this.playlist.length === 0) {
+                  new Notice('Cannot play previous track: Playlist is empty.');
+                  this.updateStatusBar('Lofi: Playlist Empty');
+             } else { // Only 1 track
+                  new Notice('Cannot play previous track: Only one track in playlist.');
+                  this.updateStatusBar('Lofi: Single Track');
+             }
+            return;
+        }
+
+        this.currentTrackIndex--;
+        if (this.currentTrackIndex < 0) {
+            this.currentTrackIndex = this.playlist.length - 1; // Wrap around to last track
+        }
+
+        const previousTrackVaultPath = this.playlist[this.currentTrackIndex];
+        console.log('Playing previous track (index):', this.currentTrackIndex, previousTrackVaultPath);
+        this.playTrackByPath(previousTrackVaultPath);
+    }
+
+    // Controls the visibility of the audio playback control status bar items.
+    public setPlaybackControlsVisibility(visible: boolean): void {
+        if (this.prevButtonEl) {
+            this.prevButtonEl.style.display = visible ? '' : 'none';
+        }
+         if (this.playPauseButtonEl) {
+            this.playPauseButtonEl.style.display = visible ? '' : 'none';
+        }
+         if (this.nextButtonEl) {
+            this.nextButtonEl.style.display = visible ? '' : 'none';
+        }
+    }
+
+    public getCurrentTrackIndex(): number {
         return this.currentTrackIndex;
     }
 
-	// Helper method for random numbers (unused currently, but could be useful for shuffle)
+	getRandomNumber(min: number = 10000, max: number = 99999) {
+		return Math.floor(Math.random() * (max - min) + min);
+	}
+
+
+    // --- NEW: Focus Timer Core Methods ---
+
+    // Public method to start or resume the timer
+    public startTimer(): void {
+        // Prevent starting if already running
+        if (this.timerState === 'working' || this.timerState === 'resting') {
+            console.log('Timer already running.');
+            // Optional: new Notice('Timer is already running.');
+            return;
+        }
+
+        // If starting from stopped, initialize remaining time and session type
+        if (this.timerState === 'stopped') {
+             this.currentSessionType = 'work'; // Always start with a work session
+             // Get duration from settings (convert minutes to seconds)
+             // Ensure duration is a positive number, fallback to default if not.
+             const workDur = this.settings.workDuration > 0 ? this.settings.workDuration : DEFAULT_LOFI_SETTINGS.workDuration;
+             this.remainingTime = workDur * 60;
+             console.log(`Starting new work session (${workDur} minutes).`);
+             new Notice(`Starting work session (${workDur} minutes)!`);
+        } else if (this.timerState === 'paused') {
+            // If resuming from paused, remaining time and session type are already set
+            console.log(`Resuming ${this.currentSessionType} session.`);
+             new Notice(`Resuming ${this.currentSessionType} session!`);
+        }
+
+        // Set the state to running
+        this.timerState = this.currentSessionType === 'work' ? 'working' : 'resting';
+
+        // Clear any existing interval just in case
+        if (this.timerIntervalId !== null) {
+             clearInterval(this.timerIntervalId);
+        }
+
+        // Start the interval timer (runs tick() every 1000ms = 1 second)
+        this.timerIntervalId = window.setInterval(() => {
+            this.tick();
+        }, 1000);
+
+        this.updateTimerDisplay(); // Update display immediately on start/resume
+        this.updateTimerControls(); // Update button states
+        this.setTimerControlsVisibility(true); // Ensure timer controls are visible (should be default now)
+    }
+
+    // Public method to pause the timer
+    public pauseTimer(): void {
+        // Only pause if currently running
+        if (this.timerState !== 'working' && this.timerState !== 'resting') {
+            console.log('Timer is not running to pause.');
+            return;
+        }
+
+        if (this.timerIntervalId !== null) {
+            clearInterval(this.timerIntervalId); // Stop the countdown
+            this.timerIntervalId = null;
+        }
+
+        this.timerState = 'paused'; // Set the state
+        console.log('Timer paused.');
+        new Notice('Timer paused.');
+
+        this.updateTimerDisplay(); // Update display to show paused state
+        this.updateTimerControls(); // Update button states (Play icon)
+    }
+
+     // Public method to reset the timer
+    public resetTimer(): void {
+        // Prevent resetting if already fully stopped and at 0
+         if (this.timerState === 'stopped' && this.remainingTime === 0) {
+             console.log('Timer already reset.');
+             // Optional: new Notice('Timer is already reset.');
+             return;
+         }
+
+        if (this.timerIntervalId !== null) {
+            clearInterval(this.timerIntervalId); // Stop the countdown
+            this.timerIntervalId = null;
+        }
+
+        this.timerState = 'stopped'; // Set state back to stopped
+        this.remainingTime = 0; // Reset remaining time to zero
+        this.currentSessionType = 'work'; // Reset session type to start with work next time
+        console.log('Timer reset.');
+        new Notice('Timer reset.');
+
+        this.updateTimerDisplay(); // Update display to show reset state (e.g., "Stopped")
+        this.updateTimerControls(); // Update button states (Start icon, potentially hide Reset if 0)
+        // Optional: setTimerControlsVisibility(false); // Can hide controls on reset if desired
+    }
+
+
+    // Private method called every second by the interval timer
+    private tick(): void {
+        // Ensure we are in a running state before ticking down
+        if (this.timerState === 'working' || this.timerState === 'resting') {
+            this.remainingTime--; // Decrement time
+
+            // Check if the session has ended
+            if (this.remainingTime <= 0) {
+                this.remainingTime = 0; // Ensure it doesn't go negative
+                this.endSession(); // Handle the end of the session
+            }
+
+            this.updateTimerDisplay(); // Update the status bar display with the new time
+        }
+    }
+
+    // Private method called when a work or rest session ends
+    private endSession(): void {
+        // Stop the current interval
+        if (this.timerIntervalId !== null) {
+            clearInterval(this.timerIntervalId);
+            this.timerIntervalId = null;
+        }
+
+        // --- Provide a cue when the session ends ---
+        const sessionEndedMessage = `${this.currentSessionType.charAt(0).toUpperCase() + this.currentSessionType.slice(1)} session ended!`;
+        new Notice(sessionEndedMessage); // Show an Obsidian notice
+        console.log(sessionEndedMessage);
+        // Optional: Add sound cue here later if implemented (e.g., play a short audio file using this.audioPlayer or a separate sound)
+        // For example, you could load a short "ding.mp3" and play it:
+        // const cueSoundPath = this.app.vault.adapter.getResourcePath('path/to/ding.mp3'); // Requires a file in your vault
+        // new Audio(cueSoundPath).play().catch(e => console.error('Error playing cue sound:', e));
+        // --- End Cue ---
+
+        // Transition to the next session type
+        if (this.currentSessionType === 'work') {
+            this.currentSessionType = 'rest';
+            this.timerState = 'stopped'; // Set to stopped so startTimer sets up the *rest* session duration correctly
+             // Optionally auto-start the next session after a short delay if needed, but auto-start is simpler for now
+            this.startTimer(); // Auto-start the rest session
+        } else { // currentSessionType === 'rest'
+            this.currentSessionType = 'work'; // After rest, go back to work (or potentially a long break later)
+            this.timerState = 'stopped'; // Set to stopped so startTimer sets up the *work* session duration correctly
+            // Optionally auto-start the next session
+            this.startTimer(); // Auto-start the next work session
+        }
+
+        // Update UI elements for the next session state
+        this.updateTimerDisplay();
+        this.updateTimerControls();
+    }
+
+    // Private helper to update the status bar timer display text (e.g., "Work: 24:59")
+    private updateTimerDisplay(): void {
+        if (this.timerDisplayEl) {
+            const minutes = Math.floor(this.remainingTime / 60);
+            const seconds = this.remainingTime % 60;
+            // Format time as MM:SS, padding with leading zeros
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            let displayStatus = '';
+            switch (this.timerState) {
+                case 'stopped':
+                    displayStatus = 'Timer: Stopped';
+                    break;
+                case 'working':
+                    displayStatus = `Work: ${formattedTime}`;
+                    break;
+                case 'resting':
+                    displayStatus = `Rest: ${formattedTime}`;
+                    break;
+                case 'paused':
+                    // Show which session type was paused and the time
+                    displayStatus = `${this.currentSessionType.charAt(0).toUpperCase() + this.currentSessionType.slice(1)}: Paused (${formattedTime})`;
+                    break;
+            }
+
+            this.timerDisplayEl.setText(displayStatus);
+        }
+    }
+
+    // Private helper to update the text/icon/ariaLabel of the timer control buttons
+    private updateTimerControls(): void {
+        if (this.timerPlayPauseButtonEl) {
+            if (this.timerState === 'stopped' || this.timerState === 'paused') {
+                this.timerPlayPauseButtonEl.setText('▶'); // Play icon when stopped or paused
+                this.timerPlayPauseButtonEl.ariaLabel = 'Start Timer';
+            } else { // 'working' or 'resting'
+                this.timerPlayPauseButtonEl.setText('⏸'); // Pause icon when running
+                this.timerPlayPauseButtonEl.ariaLabel = 'Pause Timer';
+            }
+             // Timer play/pause button is always visible
+             this.timerPlayPauseButtonEl.style.display = '';
+        }
+        // Reset button text is always '🔄', label is 'Reset Timer'.
+        // We can hide the reset button if the timer is already stopped and at 0.
+         if (this.timerResetButtonEl) {
+            // Check if timer is stopped AND time is 0
+            const isFullyReset = this.timerState === 'stopped' && this.remainingTime === 0;
+            // Hide if fully reset, otherwise show
+             this.timerResetButtonEl.style.display = isFullyReset ? 'none' : '';
+         }
+    }
+
+    // Controls the visibility of the timer status bar items.
+     public setTimerControlsVisibility(visible: boolean): void {
+         if (this.timerDisplayEl) {
+            this.timerDisplayEl.style.display = visible ? '' : 'none';
+         }
+         if (this.timerPlayPauseButtonEl) {
+            this.timerPlayPauseButtonEl.style.display = visible ? '' : 'none';
+         }
+         if (this.timerResetButtonEl) {
+            this.timerResetButtonEl.style.display = visible ? '' : 'none';
+         }
+         // Note: The updateTimerControls method now manages showing/hiding the reset button
+         // when it reaches the fully reset state (stopped, 0 time).
+         // This setTimerControlsVisibility can still be used if you want a global toggle later.
+     }
+    // --- END NEW: Focus Timer Core Methods ---
+
+
 	getRandomNumber(min: number = 10000, max: number = 99999) {
 		return Math.floor(Math.random() * (max - min) + min);
 	}
