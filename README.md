@@ -25,9 +25,9 @@ This document tracks the implementation status of features for the Obsidian Lofi
     - [x] Apply volume setting on load.
     - [x] Update volume immediately when slider changes.
 - [ ] **Source Selection in Settings:** Option to choose between local folder, YouTube stream, or predefined defaults.
-- [ ] **Subtle Animation (Visualizer):**
-    - [ ] Implement animation (e.g., falling leaves, rain) using Canvas or SVG.
-    - [ ] Add toggle in settings to turn animation on/off.
+- [x] **Subtle Animation (Visualizer):**
+    - [x] Implement animation (e.g., falling leaves, rain) using Canvas or SVG.
+    - [x] Add toggle in settings to turn animation on/off.
 
 ## ⏳ Focus Timer
 
