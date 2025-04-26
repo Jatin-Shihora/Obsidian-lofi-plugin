@@ -10,7 +10,7 @@ This document tracks the implementation status of features for the Obsidian Lofi
     - [x] Load and play the first track from the playlist on plugin load/scan.
     - [x] Implement a custom folder browser UI in settings to select the audio folder.
     - [x] List found tracks in settings and allow clicking to play a specific track.
-- [ ] **Load a default YouTube lofi stream.**
+- [ ] **Load a default YouTube lofi stream.use  cdn.jsdeliver github public repo**
 - [x] **Play/Pause Toggle (Ribbon/Command):**
     - [x] Add a ribbon icon to toggle playback.
     - [x] Add a command palette action to toggle playback.
