@@ -1,5 +1,5 @@
 # vscode
-.vscode 
+.vscode
 
 # Intellij
 *.iml
@@ -21,6 +21,8 @@ data.json
 # Exclude macOS Finder (System Explorer) View States
 .DS_Store
 
-lofi.mp3
+# Claude Code configuration
+.claude/
 
-package-lock.json
+# Test audio files
+lofi.mp3
