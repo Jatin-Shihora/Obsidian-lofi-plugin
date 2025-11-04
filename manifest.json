@@ -3,7 +3,7 @@
 	"name": "Lofi Focus",
 	"version": "1.0.2",
 	"minAppVersion": "0.15.0",
-	"description": "Play lofi music and stay focused with an integrated Pomodoro timer. Features local MP3 playback, online streams, and ambient animations.",
+	"description": "Focus better with lofi vibes and Pomodoro sessions. Stream radio or play your music library, all within your vault.",
 	"author": "Jatin Shihora",
 	"authorUrl": "https://github.com/Jatin-Shihora",
 	"fundingUrl": "https://github.com/Jatin-Shihora/Obsidian-lofi-plugin",
