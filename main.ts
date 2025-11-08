@@ -107,7 +107,7 @@ export default class LofiPlugin extends Plugin {
 
 		const ribbonIconEl = this.addRibbonIcon(
 			"music",
-			"Toggle Lofi Playback",
+			"Toggle lofi playback",
 			() => this.togglePlayback()
 		);
 		ribbonIconEl.addClass("lofi-plugin-ribbon-icon");
@@ -118,7 +118,7 @@ export default class LofiPlugin extends Plugin {
 		this.prevButtonEl.addClass("lofi-control-button");
 		this.prevButtonEl.addClass("lofi-prev-button");
 		this.prevButtonEl.setText("⏮");
-		this.prevButtonEl.ariaLabel = "Previous Track";
+		this.prevButtonEl.ariaLabel = "Previous track";
 		this.prevButtonEl.addEventListener("click", () =>
 			this.playPreviousTrack()
 		);
@@ -127,7 +127,7 @@ export default class LofiPlugin extends Plugin {
 		this.playPauseButtonEl.addClass("lofi-control-button");
 		this.playPauseButtonEl.addClass("lofi-play-pause-button");
 		this.updatePlayPauseButton(!this.audioPlayer.paused);
-		this.playPauseButtonEl.ariaLabel = "Toggle Playback";
+		this.playPauseButtonEl.ariaLabel = "Toggle playback";
 		this.playPauseButtonEl.addEventListener("click", () =>
 			this.togglePlayback()
 		);
@@ -136,7 +136,7 @@ export default class LofiPlugin extends Plugin {
 		this.nextButtonEl.addClass("lofi-control-button");
 		this.nextButtonEl.addClass("lofi-next-button");
 		this.nextButtonEl.setText("⏭");
-		this.nextButtonEl.ariaLabel = "Next Track";
+		this.nextButtonEl.ariaLabel = "Next track";
 		this.nextButtonEl.addEventListener("click", () => this.playNextTrack());
 
 		this.timerDisplayEl = this.addStatusBarItem();
@@ -147,7 +147,7 @@ export default class LofiPlugin extends Plugin {
 		this.timerPlayPauseButtonEl.addClass("lofi-control-button");
 		this.timerPlayPauseButtonEl.addClass("lofi-timer-play-pause-button");
 		this.updateTimerControls();
-		this.timerPlayPauseButtonEl.ariaLabel = "Start Timer";
+		this.timerPlayPauseButtonEl.ariaLabel = "Start timer";
 		this.timerPlayPauseButtonEl.addEventListener("click", () => {
 			if (this.timerState === "stopped" || this.timerState === "paused") {
 				this.startTimer();
@@ -160,39 +160,39 @@ export default class LofiPlugin extends Plugin {
 		this.timerResetButtonEl.addClass("lofi-control-button");
 		this.timerResetButtonEl.addClass("lofi-timer-reset-button");
 		this.timerResetButtonEl.setText("🔄");
-		this.timerResetButtonEl.ariaLabel = "Reset Timer";
+		this.timerResetButtonEl.ariaLabel = "Reset timer";
 		this.timerResetButtonEl.addEventListener("click", () =>
 			this.resetTimer()
 		);
 
 		this.addCommand({
 			id: "lofi-plugin-toggle-playback",
-			name: "Toggle Lofi Playback",
+			name: "Toggle lofi playback",
 			callback: () => this.togglePlayback(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-play-next-track",
-			name: "Play Next Lofi Track",
+			name: "Play next lofi track",
 			callback: () => this.playNextTrack(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-play-previous-track",
-			name: "Play Previous Lofi Track",
+			name: "Play previous lofi track",
 			callback: () => this.playPreviousTrack(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-start-timer",
-			name: "Start Focus Timer",
+			name: "Start focus timer",
 			callback: () => this.startTimer(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-pause-timer",
-			name: "Pause Focus Timer",
+			name: "Pause focus timer",
 			callback: () => this.pauseTimer(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-reset-timer",
-			name: "Reset Focus Timer",
+			name: "Reset focus timer",
 			callback: () => this.resetTimer(),
 		});
 
@@ -671,10 +671,10 @@ export default class LofiPlugin extends Plugin {
 		if (this.timerPlayPauseButtonEl) {
 			if (this.timerState === "stopped" || this.timerState === "paused") {
 				this.timerPlayPauseButtonEl.setText("▶");
-				this.timerPlayPauseButtonEl.ariaLabel = "Start Timer";
+				this.timerPlayPauseButtonEl.ariaLabel = "Start timer";
 			} else {
 				this.timerPlayPauseButtonEl.setText("⏸");
-				this.timerPlayPauseButtonEl.ariaLabel = "Pause Timer";
+				this.timerPlayPauseButtonEl.ariaLabel = "Pause timer";
 			}
 			this.timerPlayPauseButtonEl.setCssProps({ display: "" });
 		}

@@ -113,7 +113,7 @@ export class LofiSettingTab extends PluginSettingTab {
 			cls: "lofi-browser-up-button",
 		});
 		const selectButton = navContainer.createEl("button", {
-			text: "Select This Folder",
+			text: "Select this folder",
 			cls: "lofi-browser-select-button",
 		});
 
@@ -158,7 +158,7 @@ export class LofiSettingTab extends PluginSettingTab {
 			.setDesc("Set the duration for each focus work session")
 			.addText((text) =>
 				text
-					.setPlaceholder("e.g., 25")
+					.setPlaceholder("Say 25")
 					.setValue(this.plugin.settings.workDuration.toString())
 					.onChange(async (value) => {
 						const duration = parseInt(value, 10);
@@ -176,11 +176,11 @@ export class LofiSettingTab extends PluginSettingTab {
 					})
 			);
 		new Setting(containerEl)
-			.setName("Rest duration (minutes)")
-			.setDesc("Set the duration for each short rest session")
+			.setName("Rest duration in minutes")
+			.setDesc("Enter a valid positive number for rest duration.")
 			.addText((text) =>
 				text
-					.setPlaceholder("e.g., 5")
+					.setPlaceholder("Say 5")
 					.setValue(this.plugin.settings.restDuration.toString())
 					.onChange(async (value) => {
 						const duration = parseInt(value, 10);
@@ -189,7 +189,7 @@ export class LofiSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 						} else {
 							new Notice(
-								"Please enter a valid positive number for rest duration."
+								"Enter a valid positive number for rest duration."
 							);
 							text.setValue(
 								this.plugin.settings.restDuration.toString()
@@ -359,7 +359,7 @@ export class LofiSettingTab extends PluginSettingTab {
 				"Cannot select invalid path as folder:",
 				this.currentBrowsePath
 			);
-			new Notice("Cannot select current path: Not a valid folder.");
+			new Notice("Cannot select current path: not a valid folder.");
 			this.currentBrowsePath = "";
 			this.renderFolderContents("");
 			this.renderTrackList();
@@ -371,7 +371,7 @@ export class LofiSettingTab extends PluginSettingTab {
 		const playlist = this.plugin.playlist;
 		if (playlist.length === 0) {
 			this.trackListEl.createEl("div", {
-				text: "No MP3 files found in the selected folder.",
+				text: "No mp3 files found in the selected folder.",
 				cls: "lofi-track-list-empty",
 			});
 			return;
