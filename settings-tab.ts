@@ -31,9 +31,9 @@ export class LofiSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("Lofi plugin settings").setHeading();
+		new Setting(containerEl).setName("Lofi plugin").setHeading();
 
-		new Setting(containerEl).setName("Audio settings").setHeading();
+		new Setting(containerEl).setName("Audio").setHeading();
 		new Setting(containerEl).setName("Audio source").setHeading();
 
 		const streamOptions: Record<string, string> = {};
@@ -126,15 +126,15 @@ export class LofiSettingTab extends PluginSettingTab {
 		if (this.plugin.settings.activeStreamId === null) {
 			this.renderFolderContents(this.currentBrowsePath);
 		} else {
-			this.currentPathEl.setText("Local Folder Browser (Hidden)");
+			this.currentPathEl.setText("Local folder browser (hidden)");
 			this.folderListEl.empty();
 		}
 
 		upButton.addEventListener("click", () => {
 			this.navigateUp();
 		});
-		selectButton.addEventListener("click", async () => {
-			await this.selectCurrentFolder();
+		selectButton.addEventListener("click", () => {
+			void this.selectCurrentFolder();
 		});
 
 		new Setting(this.localFolderBrowserContainer).setName("Found local tracks").setHeading();
@@ -152,7 +152,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("hr");
 
-		new Setting(containerEl).setName("Focus timer settings").setHeading();
+		new Setting(containerEl).setName("Focus timer").setHeading();
 		new Setting(containerEl)
 			.setName("Work duration (minutes)")
 			.setDesc("Set the duration for each focus work session")
@@ -200,7 +200,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("hr");
 
-		new Setting(containerEl).setName("Animation settings").setHeading();
+		new Setting(containerEl).setName("Animation").setHeading();
 		new Setting(containerEl)
 			.setName("Enable background animation")
 			.setDesc(
@@ -231,7 +231,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 	private renderFolderContents(folderPath: string): void {
 		this.folderListEl.empty();
-		this.currentPathEl.setText(`Current Path: ${folderPath || "/"}`);
+		this.currentPathEl.setText(`Current path: ${folderPath || "/"}`);
 		try {
 			let folder: TFolder | null;
 			if (folderPath === "" || folderPath === "/") {
@@ -311,7 +311,7 @@ export class LofiSettingTab extends PluginSettingTab {
 				text: "Error loading contents.",
 				cls: "lofi-browser-error",
 			});
-			this.currentPathEl.setText(`Current Path: Error`);
+			this.currentPathEl.setText(`Current path: error`);
 		}
 	}
 
@@ -381,7 +381,7 @@ export class LofiSettingTab extends PluginSettingTab {
 				"lofi-track-list-item"
 			);
 			const trackName =
-				trackVaultPath.split("/").pop() || "Unknown Track";
+				trackVaultPath.split("/").pop() || "Unknown track";
 			trackItemEl.createEl("span", {
 				text: `${index + 1}. ${trackName}`,
 				cls: "lofi-track-name",

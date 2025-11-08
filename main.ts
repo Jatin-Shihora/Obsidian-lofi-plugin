@@ -97,8 +97,8 @@ export default class LofiPlugin extends Plugin {
 					);
 				this.audioPlayer.src = initialTrackAppPath;
 				const initialTrackName =
-					initialTrackVaultPath.split("/").pop() || "Unknown Track";
-				this.updateStatusBar(`Lofi Ready || ${initialTrackName}`);
+					initialTrackVaultPath.split("/").pop() || "Unknown track";
+				this.updateStatusBar(`Lofi ready || ${initialTrackName}`);
 			} else if (this.settings.audioFolderPath) {
 				this.updateStatusBar("Lofi: No files found");
 			}
@@ -208,7 +208,7 @@ export default class LofiPlugin extends Plugin {
 	}
 
 	onunload() {
-		this.updateStatusBar("Lofi Unloaded");
+		this.updateStatusBar("Lofi unloaded");
 
 		if (this.audioPlayer) {
 			this.audioPlayer.pause();
@@ -294,12 +294,12 @@ export default class LofiPlugin extends Plugin {
 								this.playlist[this.currentTrackIndex];
 							const currentTrackName =
 								currentTrackPath.split("/").pop() ||
-								"Unknown Track";
+								"Unknown track";
 							this.updateStatusBar(
 								`Playing: ${currentTrackName}`
 							);
 						} else {
-							this.updateStatusBar("Lofi Playing...");
+							this.updateStatusBar("Lofi playing...");
 						}
 					}
 				})
@@ -309,7 +309,7 @@ export default class LofiPlugin extends Plugin {
 						error
 					);
 					new Notice("Failed to play lofi audio, check console for details");
-					this.updateStatusBar("Lofi Play Error 😢");
+					this.updateStatusBar("Lofi play error 😢");
 				});
 		} else {
 			this.audioPlayer.pause();
@@ -319,9 +319,9 @@ export default class LofiPlugin extends Plugin {
 			} else {
 				const currentTrackPath = this.playlist[this.currentTrackIndex];
 				const currentTrackName = currentTrackPath
-					? currentTrackPath.split("/").pop() || "Unknown Track"
-					: "No Track";
-				this.updateStatusBar(`Lofi Paused || ${currentTrackName}`);
+					? currentTrackPath.split("/").pop() || "Unknown track"
+					: "No track";
+				this.updateStatusBar(`Lofi paused || ${currentTrackName}`);
 			}
 		}
 	}
@@ -339,7 +339,7 @@ export default class LofiPlugin extends Plugin {
 		const normalizedFolderPath = normalizePath(folderPath);
 
 		if (this.settings.activeStreamId !== null) {
-			this.updateStatusBar("Lofi: Stream Active");
+			this.updateStatusBar("Lofi: stream active");
 			this.setPlaybackControlsVisibility(false);
 			return;
 		}
@@ -383,8 +383,8 @@ export default class LofiPlugin extends Plugin {
 						this.audioPlayer.src = firstTrackAppPath;
 						const firstTrackName =
 							firstTrackVaultPath.split("/").pop() ||
-							"Unknown Track";
-						this.updateStatusBar(`Lofi Ready || ${firstTrackName}`);
+							"Unknown track";
+						this.updateStatusBar(`Lofi ready || ${firstTrackName}`);
 					}
 					this.setPlaybackControlsVisibility(true);
 				} else {
@@ -434,7 +434,7 @@ export default class LofiPlugin extends Plugin {
 			new Notice(
 				"Cannot play track, audio player not ready or playlist is empty"
 			);
-			this.updateStatusBar("Lofi: Play Error");
+			this.updateStatusBar("Lofi: play error");
 			return;
 		}
 
@@ -446,7 +446,7 @@ export default class LofiPlugin extends Plugin {
 				trackVaultPath
 			);
 			new Notice("Selected track not found in playlist");
-			this.updateStatusBar("Lofi: Track Error");
+			this.updateStatusBar("Lofi: track error");
 			return;
 		}
 
@@ -459,7 +459,7 @@ export default class LofiPlugin extends Plugin {
 			.play()
 			.then(() => {
 				const trackName =
-					trackVaultPath.split("/").pop() || "Unknown Track";
+					trackVaultPath.split("/").pop() || "Unknown track";
 				new Notice(`Playing: ${trackName}`);
 				this.updateStatusBar(`Playing: ${trackName}`);
 			})
@@ -482,12 +482,12 @@ export default class LofiPlugin extends Plugin {
 		if (!this.audioPlayer || this.playlist.length <= 1) {
 			if (this.playlist.length === 0) {
 				new Notice("Cannot play next track, playlist is empty");
-				this.updateStatusBar("Lofi: Playlist Empty");
+				this.updateStatusBar("Lofi: playlist empty");
 			} else {
 				new Notice(
 					"Cannot play next track, only one track in playlist"
 				);
-				this.updateStatusBar("Lofi: Single Track");
+				this.updateStatusBar("Lofi: single track");
 			}
 			return;
 		}
@@ -509,12 +509,12 @@ export default class LofiPlugin extends Plugin {
 		if (!this.audioPlayer || this.playlist.length <= 1) {
 			if (this.playlist.length === 0) {
 				new Notice("Cannot play previous track, playlist is empty");
-				this.updateStatusBar("Lofi: Playlist Empty");
+				this.updateStatusBar("Lofi: playlist empty");
 			} else {
 				new Notice(
 					"Cannot play previous track, only one track in playlist"
 				);
-				this.updateStatusBar("Lofi: Single Track");
+				this.updateStatusBar("Lofi: single track");
 			}
 			return;
 		}
@@ -648,7 +648,7 @@ export default class LofiPlugin extends Plugin {
 			let displayStatus = "";
 			switch (this.timerState) {
 				case "stopped":
-					displayStatus = "Timer: Stopped";
+					displayStatus = "Timer: stopped";
 					break;
 				case "working":
 					displayStatus = `Work: ${formattedTime}`;
@@ -875,14 +875,14 @@ export default class LofiPlugin extends Plugin {
 							`Failed to play stream: ${selectedStream.name}, check console for details`
 						);
 						this.updateStatusBar(
-							`Stream Error: ${selectedStream.name}`
+							`Stream error: ${selectedStream.name}`
 						);
 						this.setPlaybackControlsVisibility(true);
 					});
 			} else {
 				console.error("Audio player not initialized to play stream.");
 				new Notice("Audio player error, cannot play stream");
-				this.updateStatusBar("Lofi Error");
+				this.updateStatusBar("Lofi error");
 				this.setPlaybackControlsVisibility(true);
 			}
 		} else {
