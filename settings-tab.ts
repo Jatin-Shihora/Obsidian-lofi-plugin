@@ -6,11 +6,9 @@ import {
 	normalizePath,
 	TFolder,
 	TFile,
-	TAbstractFile,
 } from "obsidian";
 
 import LofiPlugin from "./main";
-import { LofiPluginSettings } from "./types";
 import { PREDEFINED_LOFI_STREAMS } from "./streams";
 
 export class LofiSettingTab extends PluginSettingTab {
@@ -33,10 +31,10 @@ export class LofiSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "Lofi Plugin Settings" });
+		new Setting(containerEl).setName("Lofi plugin settings").setHeading();
 
-		containerEl.createEl("h3", { text: "Audio Settings" });
-		containerEl.createEl("h4", { text: "Audio Source" });
+		new Setting(containerEl).setName("Audio settings").setHeading();
+		new Setting(containerEl).setName("Audio source").setHeading();
 
 		const streamOptions: Record<string, string> = {};
 		PREDEFINED_LOFI_STREAMS.forEach((stream) => {
@@ -44,9 +42,9 @@ export class LofiSettingTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName("Select Audio Source")
+			.setName("Select audio source")
 			.setDesc(
-				"Choose between playing local files or a predefined online stream."
+				"Choose between playing local files or a predefined online stream"
 			)
 			.addDropdown((dropdown) =>
 				dropdown
@@ -58,21 +56,25 @@ export class LofiSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 
 						if (value === "local") {
-							this.plugin.activateStream(null);
+							await this.plugin.activateStream(null);
 							this.renderFolderContents(
 								this.plugin.settings.audioFolderPath
 							);
 							this.renderTrackList();
-							this.localFolderSettingContainer.style.display =
-								"block";
-							this.localFolderBrowserContainer.style.display =
-								"block";
+							this.localFolderSettingContainer.setCssProps({
+								display: "block"
+							});
+							this.localFolderBrowserContainer.setCssProps({
+								display: "block"
+							});
 						} else {
-							this.plugin.activateStream(value);
-							this.localFolderSettingContainer.style.display =
-								"none";
-							this.localFolderBrowserContainer.style.display =
-								"none";
+							await this.plugin.activateStream(value);
+							this.localFolderSettingContainer.setCssProps({
+								display: "none"
+							});
+							this.localFolderBrowserContainer.setCssProps({
+								display: "none"
+							});
 							this.trackListEl.empty();
 						}
 					})
@@ -84,7 +86,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Volume")
-			.setDesc("Adjust the Lofi playback volume.")
+			.setDesc("Adjust the lofi playback volume")
 			.addSlider((slider) =>
 				slider
 					.setLimits(0, 100, 1)
@@ -97,9 +99,7 @@ export class LofiSettingTab extends PluginSettingTab {
 					})
 			);
 
-		this.localFolderBrowserContainer.createEl("h4", {
-			text: "Local Audio Folder Location",
-		});
+		new Setting(this.localFolderBrowserContainer).setName("Local audio folder location").setHeading();
 
 		const navContainer = this.localFolderBrowserContainer.createDiv(
 			"lofi-folder-browser-nav"
@@ -137,9 +137,7 @@ export class LofiSettingTab extends PluginSettingTab {
 			await this.selectCurrentFolder();
 		});
 
-		this.localFolderBrowserContainer.createEl("h4", {
-			text: "Found Local Tracks",
-		});
+		new Setting(this.localFolderBrowserContainer).setName("Found local tracks").setHeading();
 		this.localFolderBrowserContainer.createEl("p", {
 			text: "Click a track to play:",
 		});
@@ -154,10 +152,10 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("hr");
 
-		containerEl.createEl("h3", { text: "Focus Timer Settings" });
+		new Setting(containerEl).setName("Focus timer settings").setHeading();
 		new Setting(containerEl)
-			.setName("Work Duration (minutes)")
-			.setDesc("Set the duration for each focus work session.")
+			.setName("Work duration (minutes)")
+			.setDesc("Set the duration for each focus work session")
 			.addText((text) =>
 				text
 					.setPlaceholder("e.g., 25")
@@ -178,8 +176,8 @@ export class LofiSettingTab extends PluginSettingTab {
 					})
 			);
 		new Setting(containerEl)
-			.setName("Rest Duration (minutes)")
-			.setDesc("Set the duration for each short rest session.")
+			.setName("Rest duration (minutes)")
+			.setDesc("Set the duration for each short rest session")
 			.addText((text) =>
 				text
 					.setPlaceholder("e.g., 5")
@@ -202,11 +200,11 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("hr");
 
-		containerEl.createEl("h3", { text: "Animation Settings" });
+		new Setting(containerEl).setName("Animation settings").setHeading();
 		new Setting(containerEl)
-			.setName("Enable Background Animation")
+			.setName("Enable background animation")
 			.setDesc(
-				"Toggle the subtle background animation (e.g., falling circles)."
+				"Toggle the subtle background animation (falling circles)"
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -223,15 +221,15 @@ export class LofiSettingTab extends PluginSettingTab {
 			);
 
 		if (this.plugin.settings.activeStreamId !== null) {
-			this.localFolderSettingContainer.style.display = "none";
-			this.localFolderBrowserContainer.style.display = "none";
+			this.localFolderSettingContainer.setCssProps({ display: "none" });
+			this.localFolderBrowserContainer.setCssProps({ display: "none" });
 		}
 	}
 
 	private localFolderSettingContainer: HTMLElement;
 	private localFolderBrowserContainer: HTMLElement;
 
-	private async renderFolderContents(folderPath: string): Promise<void> {
+	private renderFolderContents(folderPath: string): void {
 		this.folderListEl.empty();
 		this.currentPathEl.setText(`Current Path: ${folderPath || "/"}`);
 		try {
@@ -271,7 +269,7 @@ export class LofiSettingTab extends PluginSettingTab {
 					text: "⬆️ ..",
 					cls: "lofi-browser-item-name",
 				});
-				upButtonEl.style.cursor = "pointer";
+				upButtonEl.setCssProps({ cursor: "pointer" });
 				upButtonEl.addEventListener("click", () => {
 					this.navigateUp();
 				});
@@ -290,21 +288,21 @@ export class LofiSettingTab extends PluginSettingTab {
 				const iconEl = itemEl.createEl("span", {
 					cls: "lofi-browser-item-icon",
 				});
-				const itemNameEl = itemEl.createEl("span", {
+				itemEl.createEl("span", {
 					text: child.name,
 					cls: "lofi-browser-item-name",
 				});
 				if (child instanceof TFolder) {
 					iconEl.setText("📁");
 					itemEl.addClass("lofi-browser-item-folder");
-					itemEl.style.cursor = "pointer";
+					itemEl.setCssProps({ cursor: "pointer" });
 					itemEl.addEventListener("click", () => {
 						this.navigateToFolder(child.path);
 					});
 				} else if (child instanceof TFile) {
 					iconEl.setText("📄");
 					itemEl.addClass("lofi-browser-item-file");
-					itemEl.style.cursor = "default";
+					itemEl.setCssProps({ cursor: "default" });
 				}
 			}
 		} catch (error) {
@@ -355,7 +353,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 			this.renderTrackList();
 
-			new Notice(`Audio folder set to: "${path || "/"}"`);
+			new Notice(`Audio folder set to "${path || "/"}"`);
 		} else {
 			console.error(
 				"Cannot select invalid path as folder:",
@@ -389,7 +387,7 @@ export class LofiSettingTab extends PluginSettingTab {
 				cls: "lofi-track-name",
 			});
 			trackItemEl.addClass("lofi-track-item-clickable");
-			trackItemEl.style.cursor = "pointer";
+			trackItemEl.setCssProps({ cursor: "pointer" });
 			trackItemEl.addEventListener("click", () => {
 				this.plugin.playTrackByPath(trackVaultPath);
 				this.updateTrackListPlayingState(

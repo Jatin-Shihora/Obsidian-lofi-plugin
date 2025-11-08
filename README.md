@@ -118,6 +118,10 @@ Access these from the Command Palette (Ctrl/Cmd + P):
 - Click the play button (▶) next to the timer display
 - Check timer durations are set to positive numbers in settings
 
+## Contributing
+
+Interested in contributing to this project? Check out our [Contributing Guide](CONTRIBUTING.md) to learn how to set up your development environment and submit changes.
+
 ## Support
 
 Found a bug or have a feature request?

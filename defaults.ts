@@ -1,7 +1,6 @@
 import { LofiPluginSettings } from "./types";
 
 export const DEFAULT_LOFI_SETTINGS: LofiPluginSettings = {
-	mySetting: "default",
 	volume: 30,
 	audioFolderPath: "",
 	workDuration: 25,

@@ -1,18 +1,12 @@
 import {
-	App,
-	Editor,
-	MarkdownView,
-	Modal,
 	Notice,
 	Plugin,
-	PluginSettingTab,
 	normalizePath,
 	TFolder,
 	TFile,
 } from "obsidian";
 import { LofiPluginSettings } from "./types";
 import { DEFAULT_LOFI_SETTINGS } from "./defaults";
-import { SampleModal } from "./modal";
 import { LofiSettingTab } from "./settings-tab";
 import { getStreamById } from "./streams";
 
@@ -77,13 +71,13 @@ export default class LofiPlugin extends Plugin {
 		const initialStreamId = this.settings.activeStreamId;
 
 		if (initialStreamId !== null) {
-			this.activateStream(initialStreamId);
+			await this.activateStream(initialStreamId);
 		} else {
 			if (this.settings.audioFolderPath) {
 				const normalizedPath = normalizePath(
 					this.settings.audioFolderPath
 				);
-				await this.scanAudioFolder(normalizedPath);
+				this.scanAudioFolder(normalizedPath);
 			} else {
 				this.updateStatusBar("Lofi: No folder set");
 			}
@@ -285,7 +279,7 @@ export default class LofiPlugin extends Plugin {
 			this.audioPlayer
 				.play()
 				.then(() => {
-					new Notice("Lofi playing...");
+					new Notice("Lofi is playing");
 					if (isPlayingStream) {
 						this.updateStatusBar(`Playing: ${activeStream.name}`);
 					} else {
@@ -314,12 +308,12 @@ export default class LofiPlugin extends Plugin {
 						"Error playing audio (togglePlayback):",
 						error
 					);
-					new Notice("Failed to play Lofi audio. Check console.");
+					new Notice("Failed to play lofi audio, check console for details");
 					this.updateStatusBar("Lofi Play Error 😢");
 				});
 		} else {
 			this.audioPlayer.pause();
-			new Notice("Lofi paused.");
+			new Notice("Lofi is paused");
 			if (isPlayingStream) {
 				this.updateStatusBar(`Paused: ${activeStream.name}`);
 			} else {
@@ -339,7 +333,7 @@ export default class LofiPlugin extends Plugin {
 		}
 	}
 
-	public async scanAudioFolder(folderPath: string) {
+	public scanAudioFolder(folderPath: string): void {
 		this.playlist = [];
 
 		const normalizedFolderPath = normalizePath(folderPath);
@@ -431,14 +425,14 @@ export default class LofiPlugin extends Plugin {
 	public playTrackByPath(trackVaultPath: string): void {
 		if (this.settings.activeStreamId !== null) {
 			new Notice(
-				"Cannot play local track: A stream is currently active."
+				"Cannot play local track, a stream is currently active"
 			);
 			return;
 		}
 
 		if (!this.audioPlayer || this.playlist.length === 0) {
 			new Notice(
-				"Cannot play track: Audio player not ready or playlist is empty."
+				"Cannot play track, audio player not ready or playlist is empty"
 			);
 			this.updateStatusBar("Lofi: Play Error");
 			return;
@@ -451,7 +445,7 @@ export default class LofiPlugin extends Plugin {
 				"Attempted to play track not found in playlist:",
 				trackVaultPath
 			);
-			new Notice("Error: Selected track not found in playlist.");
+			new Notice("Selected track not found in playlist");
 			this.updateStatusBar("Lofi: Track Error");
 			return;
 		}
@@ -487,11 +481,11 @@ export default class LofiPlugin extends Plugin {
 
 		if (!this.audioPlayer || this.playlist.length <= 1) {
 			if (this.playlist.length === 0) {
-				new Notice("Cannot play next track: Playlist is empty.");
+				new Notice("Cannot play next track, playlist is empty");
 				this.updateStatusBar("Lofi: Playlist Empty");
 			} else {
 				new Notice(
-					"Cannot play next track: Only one track in playlist."
+					"Cannot play next track, only one track in playlist"
 				);
 				this.updateStatusBar("Lofi: Single Track");
 			}
@@ -514,11 +508,11 @@ export default class LofiPlugin extends Plugin {
 
 		if (!this.audioPlayer || this.playlist.length <= 1) {
 			if (this.playlist.length === 0) {
-				new Notice("Cannot play previous track: Playlist is empty.");
+				new Notice("Cannot play previous track, playlist is empty");
 				this.updateStatusBar("Lofi: Playlist Empty");
 			} else {
 				new Notice(
-					"Cannot play previous track: Only one track in playlist."
+					"Cannot play previous track, only one track in playlist"
 				);
 				this.updateStatusBar("Lofi: Single Track");
 			}
@@ -539,13 +533,13 @@ export default class LofiPlugin extends Plugin {
 		const shouldBeVisible = visible && isLocalSourceActive;
 
 		if (this.prevButtonEl) {
-			this.prevButtonEl.style.display = shouldBeVisible ? "" : "none";
+			this.prevButtonEl.setCssProps({ display: shouldBeVisible ? "" : "none" });
 		}
 		if (this.playPauseButtonEl) {
-			this.playPauseButtonEl.style.display = visible ? "" : "none";
+			this.playPauseButtonEl.setCssProps({ display: visible ? "" : "none" });
 		}
 		if (this.nextButtonEl) {
-			this.nextButtonEl.style.display = shouldBeVisible ? "" : "none";
+			this.nextButtonEl.setCssProps({ display: shouldBeVisible ? "" : "none" });
 		}
 	}
 
@@ -564,9 +558,9 @@ export default class LofiPlugin extends Plugin {
 					: DEFAULT_LOFI_SETTINGS.workDuration;
 			this.currentSessionType = "work";
 			this.remainingTime = workDur * 60;
-			new Notice(`Starting work session (${workDur} minutes)!`);
+			new Notice(`Starting work session (${workDur} minutes)`);
 		} else if (this.timerState === "paused") {
-			new Notice(`Resuming ${this.currentSessionType} session!`);
+			new Notice(`Resuming ${this.currentSessionType} session`);
 		}
 		this.timerState =
 			this.currentSessionType === "work" ? "working" : "resting";
@@ -589,7 +583,7 @@ export default class LofiPlugin extends Plugin {
 			this.timerIntervalId = null;
 		}
 		this.timerState = "paused";
-		new Notice("Timer paused.");
+		new Notice("Timer is paused");
 		this.updateTimerDisplay();
 		this.updateTimerControls();
 	}
@@ -605,7 +599,7 @@ export default class LofiPlugin extends Plugin {
 		this.timerState = "stopped";
 		this.remainingTime = 0;
 		this.currentSessionType = "work";
-		new Notice("Timer reset.");
+		new Notice("Timer is reset");
 		this.updateTimerDisplay();
 		this.updateTimerControls();
 	}
@@ -636,10 +630,6 @@ export default class LofiPlugin extends Plugin {
 			this.timerState = "stopped";
 			this.startTimer();
 		} else {
-			const workDur =
-				this.settings.workDuration > 0
-					? this.settings.workDuration
-					: DEFAULT_LOFI_SETTINGS.workDuration;
 			this.currentSessionType = "work";
 			this.timerState = "stopped";
 			this.startTimer();
@@ -686,42 +676,44 @@ export default class LofiPlugin extends Plugin {
 				this.timerPlayPauseButtonEl.setText("⏸");
 				this.timerPlayPauseButtonEl.ariaLabel = "Pause Timer";
 			}
-			this.timerPlayPauseButtonEl.style.display = "";
+			this.timerPlayPauseButtonEl.setCssProps({ display: "" });
 		}
 		if (this.timerResetButtonEl) {
 			const isFullyReset =
 				this.timerState === "stopped" && this.remainingTime === 0;
-			this.timerResetButtonEl.style.display = isFullyReset ? "none" : "";
+			this.timerResetButtonEl.setCssProps({ display: isFullyReset ? "none" : "" });
 		}
 	}
 
 	public setTimerControlsVisibility(visible: boolean): void {
 		if (this.timerDisplayEl) {
-			this.timerDisplayEl.style.display = visible ? "" : "none";
+			this.timerDisplayEl.setCssProps({ display: visible ? "" : "none" });
 		}
 		if (this.timerPlayPauseButtonEl) {
-			this.timerPlayPauseButtonEl.style.display = visible ? "" : "none";
+			this.timerPlayPauseButtonEl.setCssProps({ display: visible ? "" : "none" });
 		}
 		if (this.timerResetButtonEl) {
 			const isFullyReset =
 				this.timerState === "stopped" && this.remainingTime === 0;
 			if (visible && !isFullyReset) {
-				this.timerResetButtonEl.style.display = "";
+				this.timerResetButtonEl.setCssProps({ display: "" });
 			} else {
-				this.timerResetButtonEl.style.display = "none";
+				this.timerResetButtonEl.setCssProps({ display: "none" });
 			}
 		}
 	}
 
 	private setupAnimationCanvas(): void {
 		this.animationCanvas = document.createElement("canvas");
-		this.animationCanvas.style.position = "fixed";
-		this.animationCanvas.style.top = "0";
-		this.animationCanvas.style.left = "0";
-		this.animationCanvas.style.width = "100%";
-		this.animationCanvas.style.height = "100%";
-		this.animationCanvas.style.zIndex = "0";
-		this.animationCanvas.style.pointerEvents = "none";
+		this.animationCanvas.setCssProps({
+			position: "fixed",
+			top: "0",
+			left: "0",
+			width: "100%",
+			height: "100%",
+			zIndex: "0",
+			pointerEvents: "none"
+		});
 		this.animationCanvas.classList.add("lofi-animation-canvas");
 		document.body.appendChild(this.animationCanvas);
 		this.animationContext = this.animationCanvas.getContext("2d");
@@ -880,7 +872,7 @@ export default class LofiPlugin extends Plugin {
 					.catch((error) => {
 						console.error("Error playing stream:", error);
 						new Notice(
-							`Failed to play stream: ${selectedStream.name}. Check console.`
+							`Failed to play stream: ${selectedStream.name}, check console for details`
 						);
 						this.updateStatusBar(
 							`Stream Error: ${selectedStream.name}`
@@ -889,14 +881,14 @@ export default class LofiPlugin extends Plugin {
 					});
 			} else {
 				console.error("Audio player not initialized to play stream.");
-				new Notice("Audio player error. Cannot play stream.");
+				new Notice("Audio player error, cannot play stream");
 				this.updateStatusBar("Lofi Error");
 				this.setPlaybackControlsVisibility(true);
 			}
 		} else {
 			this.settings.activeStreamId = null;
 			this.updateStatusBar("Lofi: Loading local files...");
-			await this.scanAudioFolder(this.settings.audioFolderPath);
+			this.scanAudioFolder(this.settings.audioFolderPath);
 		}
 
 		await this.saveSettings();
