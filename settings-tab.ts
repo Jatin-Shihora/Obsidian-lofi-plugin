@@ -86,7 +86,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Volume")
-			.setDesc("Adjust the Lofi playback volume")
+			.setDesc("Adjust the lofi playback volume")
 			.addSlider((slider) =>
 				slider
 					.setLimits(0, 100, 1)
@@ -176,8 +176,8 @@ export class LofiSettingTab extends PluginSettingTab {
 					})
 			);
 		new Setting(containerEl)
-			.setName("Rest duration (minutes)")
-			.setDesc("Set the duration for each rest session")
+			.setName("rest duration in minutes.")
+			.setDesc("set the duration for each rest session.")
 			.addText((text) =>
 				text
 					.setPlaceholder("Say 5")
@@ -189,7 +189,7 @@ export class LofiSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 						} else {
 							new Notice(
-								"Please enter a valid positive number for rest duration."
+								"please enter a valid positive number for rest duration."
 							);
 							text.setValue(
 								this.plugin.settings.restDuration.toString()
@@ -371,7 +371,7 @@ export class LofiSettingTab extends PluginSettingTab {
 		const playlist = this.plugin.playlist;
 		if (playlist.length === 0) {
 			this.trackListEl.createEl("div", {
-				text: "No MP3 files found in the selected folder.",
+				text: "No mp3 files found in the selected folder.",
 				cls: "lofi-track-list-empty",
 			});
 			return;
