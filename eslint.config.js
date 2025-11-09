@@ -17,6 +17,7 @@ export default [
       parserOptions: {
         ecmaVersion: "latest",
         sourceType: "module",
+        project: "./tsconfig.json",
       },
     },
     plugins: {
@@ -24,7 +25,7 @@ export default [
       obsidianmd,
     },
     rules: {
-      // Obsidian-specific rules
+      // Obsidian UI rules
       "obsidianmd/ui/sentence-case": [
         "warn",
         {
@@ -34,11 +35,29 @@ export default [
           allowAutoFix: true,
         },
       ],
-      "obsidianmd/no-static-styles-assignment": "error",
+
+      // Obsidian settings tab rules
       "obsidianmd/settings-tab/no-manual-html-headings": "error",
       "obsidianmd/settings-tab/no-problematic-settings-headings": "error",
-      "obsidianmd/sample-names": "error",
+
+      // Obsidian code quality rules
+      "obsidianmd/no-static-styles-assignment": "error",
       "obsidianmd/no-sample-code": "error",
+      "obsidianmd/sample-names": "error",
+      "obsidianmd/detach-leaves": "error",
+      "obsidianmd/no-plugin-as-component": "error",
+      "obsidianmd/no-view-references-in-plugin": "error",
+
+      // Obsidian command rules
+      "obsidianmd/commands/no-command-in-command-id": "error",
+      "obsidianmd/commands/no-command-in-command-name": "error",
+      "obsidianmd/commands/no-plugin-id-in-command-id": "error",
+      "obsidianmd/commands/no-plugin-name-in-command-name": "error",
+
+      // Obsidian best practices
+      "obsidianmd/no-tfile-tfolder-cast": "error",
+      "obsidianmd/prefer-file-manager-trash-file": "warn",
+      "obsidianmd/vault/iterate": "warn",
     },
   },
 ];
