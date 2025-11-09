@@ -86,7 +86,7 @@ export class LofiSettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Volume")
-			.setDesc("Adjust the lofi playback volume")
+			.setDesc("Adjust the Lofi playback volume")
 			.addSlider((slider) =>
 				slider
 					.setLimits(0, 100, 1)
@@ -371,7 +371,7 @@ export class LofiSettingTab extends PluginSettingTab {
 		const playlist = this.plugin.playlist;
 		if (playlist.length === 0) {
 			this.trackListEl.createEl("div", {
-				text: "No mp3 files found in the selected folder.",
+				text: "No MP3 files found in the selected folder.",
 				cls: "lofi-track-list-empty",
 			});
 			return;

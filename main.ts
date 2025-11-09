@@ -107,7 +107,7 @@ export default class LofiPlugin extends Plugin {
 
 		const ribbonIconEl = this.addRibbonIcon(
 			"music",
-			"Toggle lofi playback",
+			"Toggle Lofi playback",
 			() => this.togglePlayback()
 		);
 		ribbonIconEl.addClass("lofi-plugin-ribbon-icon");
@@ -167,17 +167,17 @@ export default class LofiPlugin extends Plugin {
 
 		this.addCommand({
 			id: "lofi-plugin-toggle-playback",
-			name: "Toggle lofi playback",
+			name: "Toggle Lofi playback",
 			callback: () => this.togglePlayback(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-play-next-track",
-			name: "Play next lofi track",
+			name: "Play next Lofi track",
 			callback: () => this.playNextTrack(),
 		});
 		this.addCommand({
 			id: "lofi-plugin-play-previous-track",
-			name: "Play previous lofi track",
+			name: "Play previous Lofi track",
 			callback: () => this.playPreviousTrack(),
 		});
 		this.addCommand({
@@ -308,7 +308,7 @@ export default class LofiPlugin extends Plugin {
 						"Error playing audio (togglePlayback):",
 						error
 					);
-					new Notice("Failed to play lofi audio, check console for details");
+					new Notice("Failed to play Lofi audio, check console for details");
 					this.updateStatusBar("Lofi play error 😢");
 				});
 		} else {
