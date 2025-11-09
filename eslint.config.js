@@ -33,6 +33,7 @@ export default [
           acronyms: ["UI", "OK", "MP3"],
           enforceCamelCaseLower: false,
           allowAutoFix: true,
+          mode: "strict",
         },
       ],
 
