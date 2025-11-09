@@ -176,8 +176,8 @@ export class LofiSettingTab extends PluginSettingTab {
 					})
 			);
 		new Setting(containerEl)
-			.setName("rest duration in minutes.")
-			.setDesc("set the duration for each rest session.")
+			.setName("Break timer")
+			.setDesc("Minutes between work sessions")
 			.addText((text) =>
 				text
 					.setPlaceholder("Say 5")
@@ -189,7 +189,7 @@ export class LofiSettingTab extends PluginSettingTab {
 							await this.plugin.saveSettings();
 						} else {
 							new Notice(
-								"please enter a valid positive number for rest duration."
+								"Enter a valid number of minutes."
 							);
 							text.setValue(
 								this.plugin.settings.restDuration.toString()
