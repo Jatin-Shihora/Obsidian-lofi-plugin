@@ -110,7 +110,7 @@ export default class LofiPlugin extends Plugin {
 			"Toggle lofi playback",
 			() => this.togglePlayback()
 		);
-		ribbonIconEl.addClass("lofi-plugin-ribbon-icon");
+		ribbonIconEl.addClass("ribbon-icon");
 
 		this.statusBarItemEl = this.addStatusBarItem();
 
@@ -166,32 +166,32 @@ export default class LofiPlugin extends Plugin {
 		);
 
 		this.addCommand({
-			id: "lofi-plugin-toggle-playback",
+			id: "toggle-playback",
 			name: "Toggle lofi playback",
 			callback: () => this.togglePlayback(),
 		});
 		this.addCommand({
-			id: "lofi-plugin-play-next-track",
+			id: "play-next-track",
 			name: "Play next lofi track",
 			callback: () => this.playNextTrack(),
 		});
 		this.addCommand({
-			id: "lofi-plugin-play-previous-track",
+			id: "play-previous-track",
 			name: "Play previous lofi track",
 			callback: () => this.playPreviousTrack(),
 		});
 		this.addCommand({
-			id: "lofi-plugin-start-timer",
+			id: "start-timer",
 			name: "Start focus timer",
 			callback: () => this.startTimer(),
 		});
 		this.addCommand({
-			id: "lofi-plugin-pause-timer",
+			id: "pause-timer",
 			name: "Pause focus timer",
 			callback: () => this.pauseTimer(),
 		});
 		this.addCommand({
-			id: "lofi-plugin-reset-timer",
+			id: "reset-timer",
 			name: "Reset focus timer",
 			callback: () => this.resetTimer(),
 		});
@@ -705,15 +705,6 @@ export default class LofiPlugin extends Plugin {
 
 	private setupAnimationCanvas(): void {
 		this.animationCanvas = document.createElement("canvas");
-		this.animationCanvas.setCssProps({
-			position: "fixed",
-			top: "0",
-			left: "0",
-			width: "100%",
-			height: "100%",
-			zIndex: "0",
-			pointerEvents: "none"
-		});
 		this.animationCanvas.classList.add("lofi-animation-canvas");
 		document.body.appendChild(this.animationCanvas);
 		this.animationContext = this.animationCanvas.getContext("2d");

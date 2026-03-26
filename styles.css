@@ -148,19 +148,6 @@ If your plugin does not need CSS, delete this file.
 
 /* --- End Styles for the Custom Folder Browser UI --- */
 
-/* You can keep your existing styles for the ribbon icon etc. below this */
-
-.lofi-plugin-ribbon-icon {
-	/* Add your styles for the ribbon icon here */
-	/* For example: */
-	/* fill: purple; */
-}
-
-/* Styles for the status bar item if you want to customize it */
-/* .status-bar-item { ... } */
-
-/* styles.css (add these below the folder browser styles) */
-
 /* --- Styles for the Track List --- */
 
 .lofi-track-list {
@@ -193,6 +180,11 @@ If your plugin does not need CSS, delete this file.
 
 .lofi-track-list-item:hover {
 	background-color: var(--background-modifier-hover); /* Hover effect */
+}
+
+/* Style for clickable track items */
+.lofi-track-item-clickable {
+	cursor: pointer;
 }
 
 /* Style for the track name text */
@@ -371,10 +363,9 @@ If your plugin does not need CSS, delete this file.
 	align-items: center;
 }
 
-/* --- NEW: Styles for Animation Canvas --- */
+/* Styles for Animation Canvas */
 .lofi-animation-canvas {
-	/* Styles are primarily set in main.ts, but defining the class is good practice */
-	/* These styles ensure it acts as a fixed overlay */
+	/* Fixed overlay for background animation */
 	position: fixed;
 	top: 0;
 	left: 0;
@@ -383,4 +374,3 @@ If your plugin does not need CSS, delete this file.
 	z-index: 0; /* Or 1, below most Obsidian UI elements */
 	pointer-events: none; /* Crucial: allows clicks/interaction with UI elements behind the canvas */
 }
-/* --- END NEW --- */

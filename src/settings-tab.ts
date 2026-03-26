@@ -31,10 +31,7 @@ export class LofiSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("Lofi plugin").setHeading();
-
 		new Setting(containerEl).setName("Audio").setHeading();
-		new Setting(containerEl).setName("Audio source").setHeading();
 
 		const streamOptions: Record<string, string> = {};
 		PREDEFINED_LOFI_STREAMS.forEach((stream) => {
@@ -269,7 +266,6 @@ export class LofiSettingTab extends PluginSettingTab {
 					text: "⬆️ ..",
 					cls: "lofi-browser-item-name",
 				});
-				upButtonEl.setCssProps({ cursor: "pointer" });
 				upButtonEl.addEventListener("click", () => {
 					this.navigateUp();
 				});
@@ -295,14 +291,12 @@ export class LofiSettingTab extends PluginSettingTab {
 				if (child instanceof TFolder) {
 					iconEl.setText("📁");
 					itemEl.addClass("lofi-browser-item-folder");
-					itemEl.setCssProps({ cursor: "pointer" });
 					itemEl.addEventListener("click", () => {
 						this.navigateToFolder(child.path);
 					});
 				} else if (child instanceof TFile) {
 					iconEl.setText("📄");
 					itemEl.addClass("lofi-browser-item-file");
-					itemEl.setCssProps({ cursor: "default" });
 				}
 			}
 		} catch (error) {
@@ -387,7 +381,6 @@ export class LofiSettingTab extends PluginSettingTab {
 				cls: "lofi-track-name",
 			});
 			trackItemEl.addClass("lofi-track-item-clickable");
-			trackItemEl.setCssProps({ cursor: "pointer" });
 			trackItemEl.addEventListener("click", () => {
 				this.plugin.playTrackByPath(trackVaultPath);
 				this.updateTrackListPlayingState(
